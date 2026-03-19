@@ -1,10 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, LogIn, LogOut, Menu, Search } from "lucide-react";
+import { ShoppingBag, Heart, LogIn, LogOut, Menu, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawer } from "./CartDrawer";
 import { toast } from "sonner";
+import { products } from "@/data/products";
 
 const navLinks = [
   { label: "Shop", href: "/shop", room: null },
