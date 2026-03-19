@@ -56,7 +56,7 @@ const Auth = () => {
                 Customer
               </button>
               <button
-                onClick={() => setRole("manager")}
+                onClick={() => { setRole("manager"); setTab("login"); }}
                 className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
                   role === "manager" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
