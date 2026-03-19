@@ -40,6 +40,13 @@ const App = () => (
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/warranty" element={<Warranty />} />
+          <Route path="/sustainability" element={<Sustainability />} />
+          <Route path="/press" element={<Press />} />
+          <Route path="/care-guide" element={<CareGuide />} />
+          <Route path="/shipping-returns" element={<ShippingReturns />} />
           <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="manager"><AdminOverview /></ProtectedRoute>} />
           <Route path="/admin/financials" element={<ProtectedRoute requiredRole="manager"><AdminFinancials /></ProtectedRoute>} />
