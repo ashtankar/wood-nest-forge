@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Shop from "./pages/Shop";
@@ -32,14 +33,14 @@ const App = () => (
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="/admin" element={<AdminOverview />} />
-          <Route path="/admin/financials" element={<AdminFinancials />} />
-          <Route path="/admin/products" element={<AdminProducts />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/b2b" element={<AdminB2B />} />
-          <Route path="/admin/promos" element={<AdminPromos />} />
-          <Route path="/admin/customers" element={<AdminCustomers />} />
+          <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute requiredRole="manager"><AdminOverview /></ProtectedRoute>} />
+          <Route path="/admin/financials" element={<ProtectedRoute requiredRole="manager"><AdminFinancials /></ProtectedRoute>} />
+          <Route path="/admin/products" element={<ProtectedRoute requiredRole="manager"><AdminProducts /></ProtectedRoute>} />
+          <Route path="/admin/orders" element={<ProtectedRoute requiredRole="manager"><AdminOrders /></ProtectedRoute>} />
+          <Route path="/admin/b2b" element={<ProtectedRoute requiredRole="manager"><AdminB2B /></ProtectedRoute>} />
+          <Route path="/admin/promos" element={<ProtectedRoute requiredRole="manager"><AdminPromos /></ProtectedRoute>} />
+          <Route path="/admin/customers" element={<ProtectedRoute requiredRole="manager"><AdminCustomers /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
