@@ -11,6 +11,13 @@ import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
+import Warranty from "./pages/Warranty";
+import Sustainability from "./pages/Sustainability";
+import Press from "./pages/Press";
+import CareGuide from "./pages/CareGuide";
+import ShippingReturns from "./pages/ShippingReturns";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminFinancials from "./pages/admin/AdminFinancials";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -33,6 +40,13 @@ const App = () => (
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/warranty" element={<Warranty />} />
+          <Route path="/sustainability" element={<Sustainability />} />
+          <Route path="/press" element={<Press />} />
+          <Route path="/care-guide" element={<CareGuide />} />
+          <Route path="/shipping-returns" element={<ShippingReturns />} />
           <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="manager"><AdminOverview /></ProtectedRoute>} />
           <Route path="/admin/financials" element={<ProtectedRoute requiredRole="manager"><AdminFinancials /></ProtectedRoute>} />
