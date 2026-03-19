@@ -1,21 +1,42 @@
-import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Heart, User, Menu, X, Search } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ShoppingBag, Heart, LogIn, LogOut, Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawer } from "./CartDrawer";
+import { toast } from "sonner";
 
 const navLinks = [
-  { label: "Shop", href: "/shop" },
-  { label: "Living Room", href: "/shop?room=Living+Room" },
-  { label: "Dining", href: "/shop?room=Dining+Room" },
-  { label: "Office", href: "/shop?room=Office" },
-  { label: "Bedroom", href: "/shop?room=Bedroom" },
+  { label: "Shop", href: "/shop", room: null },
+  { label: "Living Room", href: "/shop?room=Living+Room", room: "Living Room" },
+  { label: "Dining", href: "/shop?room=Dining+Room", room: "Dining Room" },
+  { label: "Office", href: "/shop?room=Office", room: "Office" },
+  { label: "Bedroom", href: "/shop?room=Bedroom", room: "Bedroom" },
 ];
 
 export function StorefrontHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [cartOpen, setCartOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("algoforge_logged_in") === "true");
+
+  useEffect(() => {
+    const handler = () => setIsLoggedIn(localStorage.getItem("algoforge_logged_in") === "true");
+    window.addEventListener("storage", handler);
+    window.addEventListener("auth-change", handler);
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener("auth-change", handler);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("algoforge_logged_in");
+    localStorage.removeItem("algoforge_user_role");
+    window.dispatchEvent(new Event("auth-change"));
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
@@ -55,7 +76,7 @@ export function StorefrontHeader() {
                 key={link.href}
                 to={link.href}
                 className={`text-sm font-body tracking-wide transition-colors hover:text-foreground ${
-                  location.pathname === link.href ? "text-foreground" : "text-muted-foreground"
+                  location.pathname + location.search === link.href ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 {link.label}
@@ -68,16 +89,26 @@ export function StorefrontHeader() {
             <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
             </Button>
-            <Link to="/account">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
-            <Link to="/account?tab=wishlist">
-              <Button variant="ghost" size="icon">
-                <Heart className="h-5 w-5" />
-              </Button>
-            </Link>
+
+            {isLoggedIn ? (
+              <>
+                <Link to="/account?tab=wishlist">
+                  <Button variant="ghost" size="icon">
+                    <Heart className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={handleLogout} title="Log out">
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="icon" title="Log in">
+                  <LogIn className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
+
             <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-medium">

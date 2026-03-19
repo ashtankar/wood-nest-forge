@@ -2,7 +2,7 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { products, rooms, materials, colors } from "@/data/products";
 import { Button } from "@/components/ui/button";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,12 +38,21 @@ function FilterSection({
 
 const Shop = () => {
   const [searchParams] = useSearchParams();
-  const initialRoom = searchParams.get("room");
 
-  const [selectedRooms, setSelectedRooms] = useState<string[]>(initialRoom ? [initialRoom] : []);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
+
+  // Sync room filter from URL search params
+  useEffect(() => {
+    const room = searchParams.get("room");
+    if (room) {
+      setSelectedRooms([room]);
+    } else {
+      setSelectedRooms([]);
+    }
+  }, [searchParams]);
 
   const toggle = (arr: string[], setArr: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
     setArr(arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val]);
