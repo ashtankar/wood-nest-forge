@@ -103,7 +103,7 @@ export function StorefrontHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}>
               <Search className="h-5 w-5" />
             </Button>
 
