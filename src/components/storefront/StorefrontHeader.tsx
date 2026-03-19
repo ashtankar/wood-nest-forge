@@ -1,10 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, LogIn, LogOut, Menu, Search } from "lucide-react";
+import { ShoppingBag, Heart, LogIn, LogOut, Menu, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawer } from "./CartDrawer";
 import { toast } from "sonner";
+import { products } from "@/data/products";
 
 const navLinks = [
   { label: "Shop", href: "/shop", room: null },
@@ -18,7 +20,22 @@ export function StorefrontHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const [cartOpen, setCartOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("algoforge_logged_in") === "true");
+
+  const searchResults = searchQuery.trim().length > 0
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.room.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5)
+    : [];
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
 
   useEffect(() => {
     const handler = () => setIsLoggedIn(localStorage.getItem("algoforge_logged_in") === "true");
@@ -86,7 +103,7 @@ export function StorefrontHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}>
               <Search className="h-5 w-5" />
             </Button>
 
@@ -120,6 +137,51 @@ export function StorefrontHeader() {
       </div>
 
       <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+
+      {/* Search overlay */}
+      {searchOpen && (
+        <div className="absolute top-full left-0 right-0 bg-background border-b border-border shadow-lg z-50">
+          <div className="container mx-auto px-4 lg:px-8 py-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); }
+                }}
+              />
+              <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-3 border-t border-border pt-3 space-y-1">
+                {searchResults.map((product) => (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                    className="flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <img src={product.image} alt={product.name} className="w-10 h-10 rounded object-cover" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">€{product.price}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {searchQuery.trim().length > 0 && searchResults.length === 0 && (
+              <p className="mt-3 text-sm text-muted-foreground">No products found.</p>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
