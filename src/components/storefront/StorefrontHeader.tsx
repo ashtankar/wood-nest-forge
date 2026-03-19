@@ -114,14 +114,14 @@ export function StorefrontHeader() {
                     <Heart className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={handleLogout} title="Log out">
-                  <LogOut className="h-5 w-5" />
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-sm font-body">
+                  Logout
                 </Button>
               </>
             ) : (
               <Link to="/auth">
-                <Button variant="ghost" size="icon" title="Log in">
-                  <LogIn className="h-5 w-5" />
+                <Button variant="ghost" size="sm" className="text-sm font-body">
+                  Login
                 </Button>
               </Link>
             )}
