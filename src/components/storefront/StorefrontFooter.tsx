@@ -15,9 +15,15 @@ export function StorefrontFooter() {
           <div>
             <h4 className="font-body font-semibold text-sm mb-4 uppercase tracking-wider text-muted-foreground">Shop</h4>
             <nav className="flex flex-col gap-2">
-              {["Living Room", "Dining Room", "Office", "Bedroom", "All Products"].map((item) => (
-                <Link key={item} to="/shop" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-                  {item}
+              {[
+                { label: "Living Room", href: "/shop?room=Living+Room" },
+                { label: "Dining Room", href: "/shop?room=Dining+Room" },
+                { label: "Office", href: "/shop?room=Office" },
+                { label: "Bedroom", href: "/shop?room=Bedroom" },
+                { label: "All Products", href: "/shop" },
+              ].map((item) => (
+                <Link key={item.label} to={item.href} className="text-sm text-foreground/70 hover:text-foreground transition-colors">
+                  {item.label}
                 </Link>
               ))}
             </nav>
@@ -26,9 +32,13 @@ export function StorefrontFooter() {
           <div>
             <h4 className="font-body font-semibold text-sm mb-4 uppercase tracking-wider text-muted-foreground">Company</h4>
             <nav className="flex flex-col gap-2">
-              {["About Us", "Sustainability", "Careers", "Press"].map((item) => (
-                <Link key={item} to="/" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-                  {item}
+              {[
+                { label: "About Us", href: "/about" },
+                { label: "Sustainability", href: "/sustainability" },
+                { label: "Press", href: "/press" },
+              ].map((item) => (
+                <Link key={item.label} to={item.href} className="text-sm text-foreground/70 hover:text-foreground transition-colors">
+                  {item.label}
                 </Link>
               ))}
             </nav>
@@ -37,9 +47,14 @@ export function StorefrontFooter() {
           <div>
             <h4 className="font-body font-semibold text-sm mb-4 uppercase tracking-wider text-muted-foreground">Support</h4>
             <nav className="flex flex-col gap-2">
-              {["Shipping & Returns", "Warranty", "Care Guide", "Contact Us"].map((item) => (
-                <Link key={item} to="/" className="text-sm text-foreground/70 hover:text-foreground transition-colors">
-                  {item}
+              {[
+                { label: "Shipping & Returns", href: "/shipping-returns" },
+                { label: "Warranty", href: "/warranty" },
+                { label: "Care Guide", href: "/care-guide" },
+                { label: "Contact Us", href: "/contact" },
+              ].map((item) => (
+                <Link key={item.label} to={item.href} className="text-sm text-foreground/70 hover:text-foreground transition-colors">
+                  {item.label}
                 </Link>
               ))}
             </nav>
