@@ -20,7 +20,22 @@ export function StorefrontHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const [cartOpen, setCartOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("algoforge_logged_in") === "true");
+
+  const searchResults = searchQuery.trim().length > 0
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.room.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 5)
+    : [];
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
 
   useEffect(() => {
     const handler = () => setIsLoggedIn(localStorage.getItem("algoforge_logged_in") === "true");
