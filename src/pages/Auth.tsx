@@ -65,11 +65,13 @@ const Auth = () => {
               </button>
             </div>
 
-            <Tabs value={tab} onValueChange={setTab}>
-              <TabsList className="w-full bg-muted rounded-full h-10 p-1">
-                <TabsTrigger value="login" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Log In</TabsTrigger>
-                <TabsTrigger value="signup" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Sign Up</TabsTrigger>
-              </TabsList>
+            <Tabs value={role === "manager" ? "login" : tab} onValueChange={(v) => { if (role !== "manager") setTab(v); }}>
+              {role === "customer" && (
+                <TabsList className="w-full bg-muted rounded-full h-10 p-1">
+                  <TabsTrigger value="login" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Log In</TabsTrigger>
+                  <TabsTrigger value="signup" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Sign Up</TabsTrigger>
+                </TabsList>
+              )}
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <TabsContent value="signup" className="mt-0 space-y-4">
