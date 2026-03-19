@@ -137,6 +137,51 @@ export function StorefrontHeader() {
       </div>
 
       <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+
+      {/* Search overlay */}
+      {searchOpen && (
+        <div className="absolute top-full left-0 right-0 bg-background border-b border-border shadow-lg z-50">
+          <div className="container mx-auto px-4 lg:px-8 py-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+              <Input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products..."
+                className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); }
+                }}
+              />
+              <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-3 border-t border-border pt-3 space-y-1">
+                {searchResults.map((product) => (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                    className="flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <img src={product.image} alt={product.name} className="w-10 h-10 rounded object-cover" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">€{product.price}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {searchQuery.trim().length > 0 && searchResults.length === 0 && (
+              <p className="mt-3 text-sm text-muted-foreground">No products found.</p>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
