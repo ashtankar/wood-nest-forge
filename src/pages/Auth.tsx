@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Auth = () => {
   const [tab, setTab] = useState("login");
@@ -18,6 +18,9 @@ const Auth = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      localStorage.setItem("algoforge_logged_in", "true");
+      localStorage.setItem("algoforge_user_role", role);
+      window.dispatchEvent(new Event("auth-change"));
       if (role === "manager") {
         toast.success("Welcome back, Manager");
         navigate("/admin");
@@ -43,7 +46,6 @@ const Auth = () => {
           </div>
 
           <div className="p-6 rounded-[20px] bg-card card-shadow">
-            {/* Role Selector */}
             <div className="flex gap-2 mb-6">
               <button
                 onClick={() => setRole("customer")}

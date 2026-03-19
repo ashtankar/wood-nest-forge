@@ -6,6 +6,7 @@ import { products, orders } from "@/data/products";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Download, MapPin, Package, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const savedAddresses = [
   { id: "1", label: "Home", address: "123 Design Street, Berlin 10115, Germany" },
@@ -15,6 +16,22 @@ const savedAddresses = [
 const wishlistItems = products.slice(0, 3);
 
 const Account = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const activeTab = searchParams.get("tab") || "orders";
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("algoforge_logged_in");
+    localStorage.removeItem("algoforge_user_role");
+    window.dispatchEvent(new Event("auth-change"));
+    toast.success("Logged out");
+    navigate("/");
+  };
+
   return (
     <StorefrontLayout>
       <div className="container mx-auto px-4 lg:px-8 py-8 lg:py-12">
@@ -23,10 +40,10 @@ const Account = () => {
             <h1 className="font-display text-3xl">My Account</h1>
             <p className="text-muted-foreground font-body mt-1">Sarah Mitchell · sarah@example.com</p>
           </div>
-          <Button variant="outline" onClick={() => toast.info("Logged out")}>Log Out</Button>
+          <Button variant="outline" onClick={handleLogout}>Log Out</Button>
         </div>
 
-        <Tabs defaultValue="orders">
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="bg-muted rounded-full h-10 p-1 mb-8 flex-wrap">
             <TabsTrigger value="orders" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Orders</TabsTrigger>
             <TabsTrigger value="wishlist" className="rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Wishlist</TabsTrigger>
