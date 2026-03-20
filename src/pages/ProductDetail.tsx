@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
 const ProductDetail = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const product = products.find((p) => p.id === id);
   const [currentImage, setCurrentImage] = useState(0);
