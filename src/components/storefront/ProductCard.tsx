@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/data/products";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { isLoggedIn } from "@/lib/auth";
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const navigate = useNavigate();
   const stockTag =
     product.stock === 0
       ? { label: "Out of Stock", className: "bg-destructive/10 text-destructive" }
@@ -44,6 +46,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (!isLoggedIn()) {
+                  toast.error("Please log in to add items to cart");
+                  navigate("/auth");
+                  return;
+                }
                 toast.success(`${product.name} added to cart`);
               }}
               disabled={product.stock === 0}
@@ -58,6 +65,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (!isLoggedIn()) {
+                toast.error("Please log in to add items to wishlist");
+                navigate("/auth");
+                return;
+              }
               toast.success("Added to wishlist");
             }}
           >

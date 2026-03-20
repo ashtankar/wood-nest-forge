@@ -130,7 +130,7 @@ export function StorefrontHeader() {
               </Link>
             ) : null}
 
-            {location.pathname !== "/auth" && (
+            {location.pathname !== "/auth" && isLoggedIn && (
               <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
                 <ShoppingBag className="h-5 w-5" />
                 <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-medium">

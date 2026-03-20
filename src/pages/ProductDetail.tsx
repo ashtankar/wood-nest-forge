@@ -2,16 +2,18 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
 import { products, reviews } from "@/data/products";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Star, View, ZoomIn, ChevronLeft, ChevronRight, MessageSquare, Phone, Heart, ShoppingBag, Play } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { isLoggedIn } from "@/lib/auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 
 const ProductDetail = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const product = products.find((p) => p.id === id);
   const [currentImage, setCurrentImage] = useState(0);
@@ -172,12 +174,26 @@ const ProductDetail = () => {
                 variant="hero"
                 className="flex-1"
                 disabled={product.stock === 0}
-                onClick={() => toast.success(`${qty}x ${product.name} added to cart`)}
+                onClick={() => {
+                  if (!isLoggedIn()) {
+                    toast.error("Please log in to add items to cart");
+                    navigate("/auth");
+                    return;
+                  }
+                  toast.success(`${qty}x ${product.name} added to cart`);
+                }}
               >
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 {product.stock === 0 ? "Sold Out" : "Add to Cart"}
               </Button>
-              <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => toast.success("Added to wishlist")}>
+              <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => {
+                if (!isLoggedIn()) {
+                  toast.error("Please log in to add items to wishlist");
+                  navigate("/auth");
+                  return;
+                }
+                toast.success("Added to wishlist");
+              }}>
                 <Heart className="h-5 w-5" />
               </Button>
             </div>
