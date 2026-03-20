@@ -7,6 +7,7 @@ import { Star, View, ZoomIn, ChevronLeft, ChevronRight, MessageSquare, Phone, He
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { isLoggedIn } from "@/lib/auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
