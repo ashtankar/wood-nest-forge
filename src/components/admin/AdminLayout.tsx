@@ -31,6 +31,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("algoforge_logged_in");
+    localStorage.removeItem("algoforge_user_role");
+    window.dispatchEvent(new Event("auth-change"));
+    toast.success("Logged out successfully");
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
@@ -75,7 +83,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         <div className="p-2 border-t border-border/50">
           <button
-            onClick={() => { localStorage.removeItem("algoforge_logged_in"); localStorage.removeItem("algoforge_user_role"); window.dispatchEvent(new Event("auth-change")); toast.success("Logged out successfully"); navigate("/"); }}
+            onClick={handleLogout}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-colors"
             )}
@@ -89,19 +97,24 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden h-14 flex items-center px-4 border-b border-border/50 bg-card">
-          <Link to="/admin" className="font-display text-lg">AlgoForge</Link>
-          <div className="ml-auto flex items-center gap-1 overflow-x-auto">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.href;
-              return (
-                <Link key={item.href} to={item.href}>
-                  <Button variant={isActive ? "default" : "ghost"} size="icon" className="h-9 w-9 shrink-0">
-                    <item.icon className="h-4 w-4" />
-                  </Button>
-                </Link>
-              );
-            })}
+        <header className="lg:hidden h-14 flex items-center px-4 border-b border-border/50 bg-card gap-2">
+          <Link to="/admin" className="font-display text-lg shrink-0">AlgoForge</Link>
+          <div className="ml-auto flex items-center gap-1 min-w-0">
+            <div className="flex items-center gap-1 overflow-x-auto">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link key={item.href} to={item.href}>
+                    <Button variant={isActive ? "default" : "ghost"} size="icon" className="h-9 w-9 shrink-0">
+                      <item.icon className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
+            <Button variant="ghost" size="sm" className="shrink-0 font-body" onClick={handleLogout}>
+              Log Out
+            </Button>
           </div>
         </header>
 
