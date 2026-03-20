@@ -174,8 +174,14 @@ const ProductDetail = () => {
                 variant="hero"
                 className="flex-1"
                 disabled={product.stock === 0}
-                onClick={() => toast.success(`${qty}x ${product.name} added to cart`)}
-              >
+                onClick={() => {
+                  if (!isLoggedIn()) {
+                    toast.error("Please log in to add items to cart");
+                    navigate("/auth");
+                    return;
+                  }
+                  toast.success(`${qty}x ${product.name} added to cart`);
+                }}
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 {product.stock === 0 ? "Sold Out" : "Add to Cart"}
               </Button>
