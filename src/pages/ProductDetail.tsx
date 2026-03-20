@@ -2,7 +2,7 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
 import { products, reviews } from "@/data/products";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Star, View, ZoomIn, ChevronLeft, ChevronRight, MessageSquare, Phone, Heart, ShoppingBag, Play } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
