@@ -12,6 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const navigate = useNavigate();
   const stockTag =
     product.stock === 0
       ? { label: "Out of Stock", className: "bg-destructive/10 text-destructive" }
