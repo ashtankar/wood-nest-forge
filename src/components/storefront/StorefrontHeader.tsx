@@ -103,9 +103,11 @@ export function StorefrontHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}>
-              <Search className="h-5 w-5" />
-            </Button>
+            {location.pathname !== "/auth" && (
+              <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}>
+                <Search className="h-5 w-5" />
+              </Button>
+            )}
 
             {isLoggedIn ? (
               <>
@@ -126,12 +128,14 @@ export function StorefrontHeader() {
               </Link>
             ) : null}
 
-            <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
-              <ShoppingBag className="h-5 w-5" />
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-medium">
-                2
-              </span>
-            </Button>
+            {location.pathname !== "/auth" && (
+              <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
+                <ShoppingBag className="h-5 w-5" />
+                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-medium">
+                  2
+                </span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
