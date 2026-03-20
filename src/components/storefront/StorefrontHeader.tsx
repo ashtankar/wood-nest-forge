@@ -118,13 +118,13 @@ export function StorefrontHeader() {
                   Logout
                 </Button>
               </>
-            ) : (
+            ) : location.pathname !== "/auth" ? (
               <Link to="/auth">
                 <Button variant="ghost" size="sm" className="text-sm font-body">
                   Login
                 </Button>
               </Link>
-            )}
+            ) : null}
 
             <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
               <ShoppingBag className="h-5 w-5" />
