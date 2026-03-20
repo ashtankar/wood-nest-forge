@@ -182,10 +182,18 @@ const ProductDetail = () => {
                   }
                   toast.success(`${qty}x ${product.name} added to cart`);
                 }}
+              >
                 <ShoppingBag className="h-4 w-4 mr-2" />
                 {product.stock === 0 ? "Sold Out" : "Add to Cart"}
               </Button>
-              <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => toast.success("Added to wishlist")}>
+              <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => {
+                if (!isLoggedIn()) {
+                  toast.error("Please log in to add items to wishlist");
+                  navigate("/auth");
+                  return;
+                }
+                toast.success("Added to wishlist");
+              }}>
                 <Heart className="h-5 w-5" />
               </Button>
             </div>
