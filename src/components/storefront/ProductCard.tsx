@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/data/products";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { isLoggedIn } from "@/lib/auth";
 
 interface ProductCardProps {
   product: Product;
