@@ -75,7 +75,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         <div className="p-2 border-t border-border/50">
           <button
-            onClick={() => { toast.info("Logged out"); navigate("/"); }}
+            onClick={() => { localStorage.removeItem("algoforge_logged_in"); localStorage.removeItem("algoforge_user_role"); window.dispatchEvent(new Event("auth-change")); toast.success("Logged out successfully"); navigate("/"); }}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-colors"
             )}
