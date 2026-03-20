@@ -46,6 +46,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (!isLoggedIn()) {
+                  toast.error("Please log in to add items to cart");
+                  navigate("/auth");
+                  return;
+                }
                 toast.success(`${product.name} added to cart`);
               }}
               disabled={product.stock === 0}
