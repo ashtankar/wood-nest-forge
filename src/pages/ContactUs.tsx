@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const info = [
   { icon: Mail, label: "Email", value: "hello@algoforge.com" },
@@ -16,14 +17,26 @@ const info = [
 const ContactUs = () => {
   const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      toast.success("Message sent! We'll get back to you within 24 hours.");
-      (e.target as HTMLFormElement).reset();
-    }, 800);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const { error } = await supabase.from("contact_messages").insert({
+      name: `${formData.get("firstName")} ${formData.get("lastName")}`,
+      email: formData.get("email") as string,
+      subject: formData.get("subject") as string,
+      message: formData.get("message") as string,
+    });
+
+    setSending(false);
+    if (error) {
+      toast.error("Failed to send message. Please try again.");
+      return;
+    }
+    toast.success("Message sent! We'll get back to you within 24 hours.");
+    form.reset();
   };
 
   return (
@@ -51,12 +64,12 @@ const ContactUs = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <Input placeholder="First name" required />
-              <Input placeholder="Last name" required />
+              <Input name="firstName" placeholder="First name" required />
+              <Input name="lastName" placeholder="Last name" required />
             </div>
-            <Input type="email" placeholder="Email address" required />
-            <Input placeholder="Subject" required />
-            <Textarea placeholder="Your message..." rows={5} required />
+            <Input name="email" type="email" placeholder="Email address" required />
+            <Input name="subject" placeholder="Subject" required />
+            <Textarea name="message" placeholder="Your message..." rows={5} required />
             <Button type="submit" className="w-full" disabled={sending}>
               {sending ? "Sending..." : "Send Message"}
             </Button>
