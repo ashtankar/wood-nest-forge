@@ -1,15 +1,16 @@
 import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-furniture.jpg";
 
 const Index = () => {
-  const featured = products.slice(0, 4);
-  const bestsellers = products.filter((p) => p.tags.includes("bestseller"));
+  const { data: products, isLoading } = useProducts();
+  const featured = (products ?? []).slice(0, 4);
+  const bestsellers = (products ?? []).filter((p) => p.tags.includes("bestseller"));
 
   return (
     <StorefrontLayout>
@@ -63,11 +64,15 @@ const Index = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {featured.map((product, i) => (
-            <ProductCard key={product.id} product={product} index={i} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            {featured.map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Banner */}
