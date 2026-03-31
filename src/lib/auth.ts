@@ -1,3 +1,6 @@
+// This file is kept for backward compatibility but actual auth is in AuthContext
+// Use useAuth() hook instead
 export function isLoggedIn(): boolean {
-  return localStorage.getItem("algoforge_logged_in") === "true";
+  // This is a synchronous fallback; prefer useAuth() in components
+  return false;
 }
