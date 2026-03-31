@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import Index from "./pages/Index";
@@ -31,36 +32,38 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/warranty" element={<Warranty />} />
-          <Route path="/sustainability" element={<Sustainability />} />
-          <Route path="/press" element={<Press />} />
-          <Route path="/care-guide" element={<CareGuide />} />
-          <Route path="/shipping-returns" element={<ShippingReturns />} />
-          <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute requiredRole="manager"><AdminOverview /></ProtectedRoute>} />
-          <Route path="/admin/financials" element={<ProtectedRoute requiredRole="manager"><AdminFinancials /></ProtectedRoute>} />
-          <Route path="/admin/products" element={<ProtectedRoute requiredRole="manager"><AdminProducts /></ProtectedRoute>} />
-          <Route path="/admin/orders" element={<ProtectedRoute requiredRole="manager"><AdminOrders /></ProtectedRoute>} />
-          <Route path="/admin/b2b" element={<ProtectedRoute requiredRole="manager"><AdminB2B /></ProtectedRoute>} />
-          <Route path="/admin/promos" element={<ProtectedRoute requiredRole="manager"><AdminPromos /></ProtectedRoute>} />
-          <Route path="/admin/customers" element={<ProtectedRoute requiredRole="manager"><AdminCustomers /></ProtectedRoute>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/warranty" element={<Warranty />} />
+            <Route path="/sustainability" element={<Sustainability />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/care-guide" element={<CareGuide />} />
+            <Route path="/shipping-returns" element={<ShippingReturns />} />
+            <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminOverview /></ProtectedRoute>} />
+            <Route path="/admin/financials" element={<ProtectedRoute requiredRole="admin"><AdminFinancials /></ProtectedRoute>} />
+            <Route path="/admin/products" element={<ProtectedRoute requiredRole="admin"><AdminProducts /></ProtectedRoute>} />
+            <Route path="/admin/orders" element={<ProtectedRoute requiredRole="admin"><AdminOrders /></ProtectedRoute>} />
+            <Route path="/admin/b2b" element={<ProtectedRoute requiredRole="admin"><AdminB2B /></ProtectedRoute>} />
+            <Route path="/admin/promos" element={<ProtectedRoute requiredRole="admin"><AdminPromos /></ProtectedRoute>} />
+            <Route path="/admin/customers" element={<ProtectedRoute requiredRole="admin"><AdminCustomers /></ProtectedRoute>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

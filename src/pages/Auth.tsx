@@ -6,29 +6,77 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [tab, setTab] = useState("login");
-  const [role, setRole] = useState<"customer" | "manager">("customer");
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const navigate = useNavigate();
+  const { user, role } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  if (user) {
+    if (role === "admin") {
+      navigate("/admin", { replace: true });
+    } else {
+      navigate("/account", { replace: true });
+    }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      localStorage.setItem("algoforge_logged_in", "true");
-      localStorage.setItem("algoforge_user_role", role);
-      window.dispatchEvent(new Event("auth-change"));
-      if (role === "manager") {
-        toast.success("Welcome back, Manager");
-        navigate("/admin");
-      } else {
-        toast.success("Welcome to AlgoForge");
-        navigate("/account");
-      }
-    }, 1000);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Welcome back!");
+    // AuthContext will update; redirect handled by useEffect or next render
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Account created! Check your email to confirm.");
+  };
+
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) toast.error(error.message);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email first");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Password reset link sent to your email");
+    }
   };
 
   return (
@@ -46,63 +94,61 @@ const Auth = () => {
           </div>
 
           <div className="p-6 rounded-[20px] bg-card card-shadow">
-            <div className="flex gap-2 mb-6">
-              <button
-                onClick={() => setRole("customer")}
-                className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
-                  role === "customer" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Customer
-              </button>
-              <button
-                onClick={() => { setRole("manager"); setTab("login"); }}
-                className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
-                  role === "manager" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Business Manager
-              </button>
-            </div>
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsList className="w-full bg-muted rounded-full h-10 p-1">
+                <TabsTrigger value="login" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Log In</TabsTrigger>
+                <TabsTrigger value="signup" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Sign Up</TabsTrigger>
+              </TabsList>
 
-            <Tabs value={role === "manager" ? "login" : tab} onValueChange={(v) => { if (role !== "manager") setTab(v); }}>
-              {role === "customer" && (
-                <TabsList className="w-full bg-muted rounded-full h-10 p-1">
-                  <TabsTrigger value="login" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Log In</TabsTrigger>
-                  <TabsTrigger value="signup" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Sign Up</TabsTrigger>
-                </TabsList>
-              )}
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="mt-6 space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Password</label>
+                    <Input type="password" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  </div>
+                  <button type="button" onClick={handleForgotPassword} className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                  <Button variant="hero" className="w-full" disabled={loading}>
+                    {loading ? "Please wait…" : "Log In"}
+                  </Button>
+                </form>
+              </TabsContent>
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                <TabsContent value="signup" className="mt-0 space-y-4">
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="mt-6 space-y-4">
                   <div>
                     <label className="text-sm font-medium">Full Name</label>
-                    <Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="Sarah Mitchell" />
+                    <Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="Sarah Mitchell" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   </div>
-                </TabsContent>
-
-                <div>
-                  <label className="text-sm font-medium">Email</label>
-                  <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Password</label>
-                  <Input type="password" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="••••••••" required />
-                </div>
-
-                {tab === "signup" && role === "manager" && (
                   <div>
-                    <label className="text-sm font-medium">Company Name</label>
-                    <Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="Studio ABC" />
+                    <label className="text-sm font-medium">Email</label>
+                    <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
-                )}
-
-                <Button variant="hero" className="w-full" disabled={loading}>
-                  {loading ? "Please wait…" : tab === "login" ? "Log In" : "Create Account"}
-                </Button>
-              </form>
+                  <div>
+                    <label className="text-sm font-medium">Password</label>
+                    <Input type="password" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  </div>
+                  <Button variant="hero" className="w-full" disabled={loading}>
+                    {loading ? "Please wait…" : "Create Account"}
+                  </Button>
+                </form>
+              </TabsContent>
             </Tabs>
+
+            <div className="mt-4">
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">or</span></div>
+              </div>
+              <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
+                Continue with Google
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>
