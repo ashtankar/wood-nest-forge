@@ -2,12 +2,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { products } from "@/data/products";
-
-const cartItems = [
-  { product: products[0], qty: 1 },
-  { product: products[4], qty: 2 },
-];
+import { useCart } from "@/hooks/useCart";
 
 interface CartDrawerProps {
   open: boolean;
@@ -15,7 +10,8 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
-  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.qty, 0);
+  const { items, updateQuantity, removeFromCart } = useCart();
+  const subtotal = items.reduce((sum, item) => sum + Number(item.product.price) * item.quantity, 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -25,29 +21,41 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-4 space-y-4">
-          {cartItems.map((item) => (
-            <div key={item.product.id} className="flex gap-4 p-3 rounded-lg bg-card card-shadow">
+          {items.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">Your cart is empty</p>
+          )}
+          {items.map((item) => (
+            <div key={item.id} className="flex gap-4 p-3 rounded-lg bg-card card-shadow">
               <img
-                src={item.product.image}
+                src={item.product.image_url}
                 alt={item.product.name}
                 className="w-20 h-20 object-cover rounded-md"
               />
               <div className="flex-1 min-w-0">
                 <h4 className="font-body font-medium text-sm truncate">{item.product.name}</h4>
                 <p className="text-muted-foreground text-sm tabular-nums">
-                  €{item.product.price.toLocaleString()}
+                  €{Number(item.product.price).toLocaleString()}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <Button variant="outline" size="icon" className="h-7 w-7">
+                  <Button
+                    variant="outline" size="icon" className="h-7 w-7"
+                    onClick={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity - 1 })}
+                  >
                     <Minus className="h-3 w-3" />
                   </Button>
-                  <span className="text-sm tabular-nums w-6 text-center">{item.qty}</span>
-                  <Button variant="outline" size="icon" className="h-7 w-7">
+                  <span className="text-sm tabular-nums w-6 text-center">{item.quantity}</span>
+                  <Button
+                    variant="outline" size="icon" className="h-7 w-7"
+                    onClick={() => updateQuantity.mutate({ cartItemId: item.id, quantity: item.quantity + 1 })}
+                  >
                     <Plus className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7 self-start">
+              <Button
+                variant="ghost" size="icon" className="h-7 w-7 self-start"
+                onClick={() => removeFromCart.mutate(item.id)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -63,11 +71,13 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
             <span className="text-muted-foreground">Shipping</span>
             <span className="text-muted-foreground">Calculated at checkout</span>
           </div>
-          <Link to="/checkout" onClick={() => onOpenChange(false)}>
-            <Button variant="hero" className="w-full mt-2">
-              Proceed to Checkout
-            </Button>
-          </Link>
+          {items.length > 0 && (
+            <Link to="/checkout" onClick={() => onOpenChange(false)}>
+              <Button variant="hero" className="w-full mt-2">
+                Proceed to Checkout
+              </Button>
+            </Link>
+          )}
         </div>
       </SheetContent>
     </Sheet>

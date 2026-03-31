@@ -1,12 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, LogIn, LogOut, Menu, Search, X } from "lucide-react";
+import { ShoppingBag, Heart, Menu, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { CartDrawer } from "./CartDrawer";
-import { toast } from "sonner";
-import { products } from "@/data/products";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/hooks/useCart";
+import { useProducts } from "@/hooks/useProducts";
 
 const navLinks = [
   { label: "Shop", href: "/shop", room: null },
@@ -19,13 +20,16 @@ const navLinks = [
 export function StorefrontHeader() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { items: cartItems } = useCart();
+  const { data: products } = useProducts();
   const [cartOpen, setCartOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("algoforge_logged_in") === "true");
+  const isAuthPage = location.pathname === "/auth";
 
-  const searchResults = searchQuery.trim().length > 0
+  const searchResults = searchQuery.trim().length > 0 && products
     ? products.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -37,21 +41,8 @@ export function StorefrontHeader() {
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
 
-  useEffect(() => {
-    const handler = () => setIsLoggedIn(localStorage.getItem("algoforge_logged_in") === "true");
-    window.addEventListener("storage", handler);
-    window.addEventListener("auth-change", handler);
-    return () => {
-      window.removeEventListener("storage", handler);
-      window.removeEventListener("auth-change", handler);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("algoforge_logged_in");
-    localStorage.removeItem("algoforge_user_role");
-    window.dispatchEvent(new Event("auth-change"));
-    toast.success("Logged out successfully");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 
@@ -60,26 +51,24 @@ export function StorefrontHeader() {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Mobile menu */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80 bg-background">
-              <nav className="flex flex-col gap-4 mt-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    className="text-lg font-body text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
+          {!isAuthPage && (
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 bg-background">
+                <nav className="flex flex-col gap-4 mt-8">
+                  {navLinks.map((link) => (
+                    <Link key={link.href} to={link.href} className="text-lg font-body text-foreground/80 hover:text-foreground transition-colors">
+                      {link.label}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          )}
 
           {/* Logo */}
           <Link to="/" className="font-display text-2xl lg:text-3xl tracking-tight text-foreground">
@@ -87,7 +76,7 @@ export function StorefrontHeader() {
           </Link>
 
           {/* Desktop nav */}
-          {location.pathname !== "/auth" && (
+          {!isAuthPage && (
             <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
                 <Link
@@ -105,13 +94,13 @@ export function StorefrontHeader() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            {location.pathname !== "/auth" && (
+            {!isAuthPage && (
               <Button variant="ghost" size="icon" onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}>
                 <Search className="h-5 w-5" />
               </Button>
             )}
 
-            {isLoggedIn ? (
+            {user ? (
               <>
                 <Link to="/account?tab=wishlist">
                   <Button variant="ghost" size="icon">
@@ -121,28 +110,27 @@ export function StorefrontHeader() {
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="text-sm font-body">
                   Logout
                 </Button>
+                <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
+                  <ShoppingBag className="h-5 w-5" />
+                  {cartItems.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-medium">
+                      {cartItems.reduce((s, i) => s + i.quantity, 0)}
+                    </span>
+                  )}
+                </Button>
               </>
-            ) : location.pathname !== "/auth" ? (
+            ) : !isAuthPage ? (
               <Link to="/auth">
                 <Button variant="ghost" size="sm" className="text-sm font-body">
                   Login
                 </Button>
               </Link>
             ) : null}
-
-            {location.pathname !== "/auth" && isLoggedIn && (
-              <Button variant="ghost" size="icon" className="relative" onClick={() => setCartOpen(true)}>
-                <ShoppingBag className="h-5 w-5" />
-                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-medium">
-                  2
-                </span>
-              </Button>
-            )}
           </div>
         </div>
       </div>
 
-      <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
+      {user && <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />}
 
       {/* Search overlay */}
       {searchOpen && (
@@ -169,11 +157,11 @@ export function StorefrontHeader() {
                 {searchResults.map((product) => (
                   <Link
                     key={product.id}
-                    to={`/product/${product.id}`}
+                    to={`/product/${product.slug}`}
                     onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
                     className="flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors"
                   >
-                    <img src={product.image} alt={product.name} className="w-10 h-10 rounded object-cover" />
+                    <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded object-cover" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{product.name}</p>
                       <p className="text-xs text-muted-foreground">€{product.price}</p>
