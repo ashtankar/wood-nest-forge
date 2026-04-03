@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [tab, setTab] = useState("login");
+  const [loginType, setLoginType] = useState<"customer" | "business">("customer");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +27,9 @@ const Auth = () => {
       navigate("/account", { replace: true });
     }
   }
+
+  // Business owners can only log in, not sign up
+  const effectiveTab = loginType === "business" ? "login" : tab;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,18 +97,80 @@ const Auth = () => {
             <p className="text-muted-foreground font-body mt-1">Sign in to your AlgoForge account</p>
           </div>
 
-          <div className="p-6 rounded-[20px] bg-card card-shadow">
-            <Tabs value={tab} onValueChange={setTab}>
-              <TabsList className="w-full bg-muted rounded-full h-10 p-1">
-                <TabsTrigger value="login" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Log In</TabsTrigger>
-                <TabsTrigger value="signup" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Sign Up</TabsTrigger>
-              </TabsList>
+          {/* Login type selector */}
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant={loginType === "customer" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => { setLoginType("customer"); setTab("login"); }}
+            >
+              Customer
+            </Button>
+            <Button
+              variant={loginType === "business" ? "default" : "outline"}
+              className="flex-1"
+              onClick={() => setLoginType("business")}
+            >
+              Business Owner
+            </Button>
+          </div>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="mt-6 space-y-4">
+          <div className="p-6 rounded-[20px] bg-card card-shadow">
+            {loginType === "customer" ? (
+              <Tabs value={tab} onValueChange={setTab}>
+                <TabsList className="w-full bg-muted rounded-full h-10 p-1">
+                  <TabsTrigger value="login" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Log In</TabsTrigger>
+                  <TabsTrigger value="signup" className="flex-1 rounded-full data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm">Sign Up</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <form onSubmit={handleLogin} className="mt-6 space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Email</label>
+                      <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Password</label>
+                      <Input type="password" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                    </div>
+                    <button type="button" onClick={handleForgotPassword} className="text-xs text-primary hover:underline">
+                      Forgot password?
+                    </button>
+                    <Button variant="hero" className="w-full" disabled={loading}>
+                      {loading ? "Please wait…" : "Log In"}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup">
+                  <form onSubmit={handleSignup} className="mt-6 space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Full Name</label>
+                      <Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="Sarah Mitchell" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Email</label>
+                      <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Password</label>
+                      <Input type="password" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                    </div>
+                    <Button variant="hero" className="w-full" disabled={loading}>
+                      {loading ? "Please wait…" : "Create Account"}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div>
+                <p className="text-sm text-muted-foreground mb-4 text-center">
+                  Business owner login is restricted to authorized accounts only.
+                </p>
+                <form onSubmit={handleLogin} className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <label className="text-sm font-medium">Business Email</label>
+                    <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="admin@company.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                   <div>
                     <label className="text-sm font-medium">Password</label>
@@ -114,31 +180,11 @@ const Auth = () => {
                     Forgot password?
                   </button>
                   <Button variant="hero" className="w-full" disabled={loading}>
-                    {loading ? "Please wait…" : "Log In"}
+                    {loading ? "Please wait…" : "Log In as Business Owner"}
                   </Button>
                 </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="mt-6 space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Full Name</label>
-                    <Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="Sarah Mitchell" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <Input type="email" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Password</label>
-                    <Input type="password" className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                  </div>
-                  <Button variant="hero" className="w-full" disabled={loading}>
-                    {loading ? "Please wait…" : "Create Account"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
 
             <div className="mt-4">
               <div className="relative my-4">
