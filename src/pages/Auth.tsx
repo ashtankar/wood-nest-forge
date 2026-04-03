@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [tab, setTab] = useState("login");
+  const [loginType, setLoginType] = useState<"customer" | "business">("customer");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +27,9 @@ const Auth = () => {
       navigate("/account", { replace: true });
     }
   }
+
+  // Business owners can only log in, not sign up
+  const effectiveTab = loginType === "business" ? "login" : tab;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
