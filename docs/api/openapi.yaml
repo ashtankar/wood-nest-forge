@@ -1,107 +1,210 @@
 openapi: 3.0.3
 info:
-  title: E-Commerce Storefront & Admin API
+  title: E-Commerce Storefront & B2B Admin API
   version: 1.0.0
   description: |
-    # API Overview
-    Welcome to the official API documentation for the E-Commerce Storefront and Admin dashboard. 
+    # API Documentation Overview
+    Welcome to the official developer documentation for the E-Commerce Storefront and B2B Admin Platform.
+
+    ---
     
-    This API follows RESTful conventions, accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes.
-    
-    ## Authentication
-    Admin routes require a Bearer token. Include it in the header:
-    `Authorization: Bearer <your_token>`
-    
-    ## Architecture Mapping
-    | Module | Frontend Component | Database Entity | User Story |
-    |---|---|---|---|
-    | **Catalog** | `<ProductCard />` | `Products` | As a customer, I want to view available products to make a purchase. |
-    | **Cart** | `<CartDrawer />` | `Sessions/Cart` | As a customer, I want to manage selected items before checkout. |
-    | **Admin** | `<AdminOrders />` | `Orders` | As an admin, I want to view orders to manage fulfillment. |
+    ## User Story to API Mappings
+    This architecture directly fulfills the project's core business requirements.
+
+    ### Business Owner & Manager (Admin & B2B)
+    | Requirement | Relevant Endpoint | User Story Status |
+    |---|---|---|
+    | **Analytics Dashboard** | `GET /admin/analytics` | Track business growth, seasonal trends, and top SKUs. |
+    | **Product CMS** | `POST /admin/products`, `PUT /admin/products/{id}` | Easily add, edit, or remove inventory. |
+    | **B2B PDF Catalog** | `GET /b2b/catalog/pdf` | Resellers download wholesale pricing tiers instantly. |
+    | **Automated Invoices** | `GET /orders/{id}/invoice` | Tax-compliant invoice generation upon confirmation. |
+    | **Fulfillment & Tracking** | `PATCH /admin/orders/{id}/status` | Attach courier links; automate customer updates. |
+
+    ### Customer / Shopper (Storefront)
+    | Requirement | Relevant Endpoint | User Story Status |
+    |---|---|---|
+    | **Storefront Browsing** | `GET /products` (with filters) | Filter by room, material, price, and view 24/7. |
+    | **Rich Product Details** | `GET /products/{id}` | View videos, close-ups, and exact scale/color. |
+    | **Similar Items Engine** | `GET /products/{id}/recommendations` | Cross-sell and up-sell via complementary products. |
+    | **Bulk Order Chat** | `POST /support/inquiries` | Negotiate large/B2B purchases directly with sales. |
 
   contact:
-    name: API Support Team
-    email: developers@yourcompany.com
-    url: https://yourcompany.com/support
-  x-logo:
-    url: "https://yourcompany.com/assets/logo.png"
-    altText: "Company Logo"
+    name: Engineering Team
+    email: api-support@yourcompany.com
 
 servers:
   - url: https://api.yourcompany.com/v1
     description: Production Environment
   - url: http://localhost:8000/api
-    description: Local Development
+    description: Local Development Environment
 
 tags:
-  - name: Storefront
-    description: Endpoints for customer-facing product discovery.
-  - name: Cart & Checkout
-    description: Endpoints for managing the shopping cart.
-  - name: Admin Management
-    description: Secure endpoints for back-office operations.
+  - name: Storefront Catalog
+    description: Customer-facing product discovery and filtering.
+  - name: Orders & Cart
+    description: Cart management and checkout flow.
+  - name: Admin CMS
+    description: Back-office product and inventory management.
+  - name: Admin Operations
+    description: Order fulfillment, analytics, and financials.
+  - name: B2B & Support
+    description: Wholesale catalogs and customer inquiries.
 
 paths:
   /products:
     get:
-      tags:
-        - Storefront
-      summary: List all products
-      operationId: listProducts
-      description: Retrieves a paginated list of active products available in the storefront.
+      tags: [Storefront Catalog]
+      summary: List and filter products
+      description: |
+        Retrieves the product catalog. 
+        **User Story Fulfillment:** "I want to filter the catalog by categories like room type, material, color, and price range."
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: maxPrice
+          in: query
+          schema: { type: number }
       responses:
         '200':
-          description: Successfully retrieved the product catalog.
+          description: A list of products.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductListResponse'
-        '500':
-          $ref: '#/components/responses/InternalError'
+                $ref: '#/components/schemas/ProductList'
 
-  /cart:
+  /products/{id}:
+    get:
+      tags: [Storefront Catalog]
+      summary: Get product details
+      description: |
+        Retrieves rich product data, including high-quality video links and image close-ups.
+        **User Story Fulfillment:** "I want to view high-quality product videos, and detailed close-ups."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Detailed product data.
+
+  /products/{id}/recommendations:
+    get:
+      tags: [Storefront Catalog]
+      summary: Get complementary items
+      description: |
+        **User Story Fulfillment:** "I want an automated product recommendation engine that displays 'Similar Items' and 'Complementary Products'."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of recommended products.
+
+  /orders:
     post:
-      tags:
-        - Cart & Checkout
-      summary: Add item to cart
-      operationId: addToCart
-      description: Adds a specified quantity of a product to the current user's cart session.
+      tags: [Orders & Cart]
+      summary: Place an order
+      description: |
+        Converts a cart session into a confirmed order.
+        **User Story Fulfillment:** "I want a fully functional storefront so customers can place orders 24/7."
+      responses:
+        '201':
+          description: Order placed successfully.
+
+  /orders/{id}/invoice:
+    get:
+      tags: [Orders & Cart]
+      summary: Download Tax Invoice
+      description: |
+        **User Story Fulfillment:** "I want automated, tax-compliant invoice generation and email dispatch."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: PDF Invoice binary stream.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  /support/inquiries:
+    post:
+      tags: [B2B & Support]
+      summary: Submit bulk/high-value inquiry
+      description: |
+        **User Story Fulfillment:** "I want an integrated chat feature for bulk or high-value orders to negotiate pricing."
+      responses:
+        '201':
+          description: Inquiry sent to sales team.
+
+  /b2b/catalog/pdf:
+    get:
+      tags: [B2B & Support]
+      summary: Download Wholesale Catalog
+      description: |
+        **User Story Fulfillment:** "I want a feature for B2B clients and bulk buyers to download a comprehensive, dynamically updated PDF catalog."
+      responses:
+        '200':
+          description: PDF Catalog binary stream.
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  /admin/analytics:
+    get:
+      tags: [Admin Operations]
+      summary: Get business metrics
+      security: [{ bearerAuth: [] }]
+      description: |
+        **User Story Fulfillment:** "I want a centralized analytics dashboard displaying metrics like sales, revenue, and top-selling SKUs."
+      responses:
+        '200':
+          description: Aggregated analytics data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsDashboard'
+
+  /admin/products:
+    post:
+      tags: [Admin CMS]
+      summary: Add new product
+      security: [{ bearerAuth: [] }]
+      description: |
+        **User Story Fulfillment:** "I want an intuitive CMS to easily add, edit, or remove products."
+      responses:
+        '201':
+          description: Product created.
+
+  /admin/orders/{id}/status:
+    patch:
+      tags: [Admin Operations]
+      summary: Update fulfillment and tracking
+      security: [{ bearerAuth: [] }]
+      description: |
+        **User Story Fulfillment:** "I want the ability to update order fulfillment statuses and attach courier tracking links."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CartItemRequest'
-      responses:
-        '201':
-          description: Item successfully added to the cart.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CartResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /admin/orders:
-    get:
-      tags:
-        - Admin Management
-      summary: List customer orders
-      operationId: listAdminOrders
-      description: Retrieves a comprehensive list of customer orders. Allows filtering by status (e.g., Pending, Shipped).
-      security:
-        - bearerAuth: []
+              type: object
+              properties:
+                status: { type: string, enum: [Pending, Shipped, Delivered] }
+                trackingUrl: { type: string }
       responses:
         '200':
-          description: Successfully retrieved orders.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderListResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
+          description: Order status updated.
 
 components:
   securitySchemes:
@@ -109,130 +212,24 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: "Enter your JWT token in the format: Bearer <token>"
-
-  responses:
-    BadRequest:
-      description: Invalid request parameters or payload.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Missing or invalid authentication token.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Forbidden:
-      description: Authenticated, but lacks required admin privileges.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    InternalError:
-      description: An unexpected error occurred on the server.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
 
   schemas:
-    # Standardized Enterprise Error Model
-    Error:
+    ProductList:
+      type: array
+      items:
+        type: object
+        properties:
+          id: { type: string }
+          name: { type: string }
+          price: { type: number }
+          media: 
+            type: array
+            items: { type: string }
+    AnalyticsDashboard:
       type: object
       properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: string
-              example: "invalid_request_error"
-            message:
-              type: string
-              example: "The provided product ID does not exist."
-            status:
-              type: integer
-              example: 400
-
-    Product:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "prod_01H9X"
-        name:
-          type: string
-          example: "Ergonomic Office Chair"
-        price:
-          type: number
-          format: float
-          example: 199.99
-        inStock:
-          type: boolean
-          example: true
-
-    ProductListResponse:
-      type: object
-      properties:
-        object:
-          type: string
-          example: "list"
-        data:
+        totalRevenue: { type: number }
+        activeOrders: { type: integer }
+        topSkus:
           type: array
-          items:
-            $ref: '#/components/schemas/Product'
-
-    CartItemRequest:
-      type: object
-      required:
-        - productId
-        - quantity
-      properties:
-        productId:
-          type: string
-          example: "prod_01H9X"
-        quantity:
-          type: integer
-          minimum: 1
-          example: 1
-
-    CartResponse:
-      type: object
-      properties:
-        cartId:
-          type: string
-          example: "cart_882A"
-        itemCount:
-          type: integer
-          example: 3
-        subtotal:
-          type: number
-          format: float
-          example: 599.97
-
-    Order:
-      type: object
-      properties:
-        orderId:
-          type: string
-          example: "ord_993B"
-        status:
-          type: string
-          enum: [Pending, Processing, Shipped, Delivered]
-          example: "Processing"
-        totalAmount:
-          type: number
-          format: float
-          example: 599.97
-
-    OrderListResponse:
-      type: object
-      properties:
-        object:
-          type: string
-          example: "list"
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Order'
+          items: { type: string }
