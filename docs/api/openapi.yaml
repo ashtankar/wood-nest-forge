@@ -1,0 +1,238 @@
+openapi: 3.0.3
+info:
+  title: E-Commerce Storefront & Admin API
+  version: 1.0.0
+  description: |
+    # API Overview
+    Welcome to the official API documentation for the E-Commerce Storefront and Admin dashboard. 
+    
+    This API follows RESTful conventions, accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes.
+    
+    ## Authentication
+    Admin routes require a Bearer token. Include it in the header:
+    `Authorization: Bearer <your_token>`
+    
+    ## Architecture Mapping
+    | Module | Frontend Component | Database Entity | User Story |
+    |---|---|---|---|
+    | **Catalog** | `<ProductCard />` | `Products` | As a customer, I want to view available products to make a purchase. |
+    | **Cart** | `<CartDrawer />` | `Sessions/Cart` | As a customer, I want to manage selected items before checkout. |
+    | **Admin** | `<AdminOrders />` | `Orders` | As an admin, I want to view orders to manage fulfillment. |
+
+  contact:
+    name: API Support Team
+    email: developers@yourcompany.com
+    url: https://yourcompany.com/support
+  x-logo:
+    url: "https://yourcompany.com/assets/logo.png"
+    altText: "Company Logo"
+
+servers:
+  - url: https://api.yourcompany.com/v1
+    description: Production Environment
+  - url: http://localhost:8000/api
+    description: Local Development
+
+tags:
+  - name: Storefront
+    description: Endpoints for customer-facing product discovery.
+  - name: Cart & Checkout
+    description: Endpoints for managing the shopping cart.
+  - name: Admin Management
+    description: Secure endpoints for back-office operations.
+
+paths:
+  /products:
+    get:
+      tags:
+        - Storefront
+      summary: List all products
+      operationId: listProducts
+      description: Retrieves a paginated list of active products available in the storefront.
+      responses:
+        '200':
+          description: Successfully retrieved the product catalog.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /cart:
+    post:
+      tags:
+        - Cart & Checkout
+      summary: Add item to cart
+      operationId: addToCart
+      description: Adds a specified quantity of a product to the current user's cart session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartItemRequest'
+      responses:
+        '201':
+          description: Item successfully added to the cart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /admin/orders:
+    get:
+      tags:
+        - Admin Management
+      summary: List customer orders
+      operationId: listAdminOrders
+      description: Retrieves a comprehensive list of customer orders. Allows filtering by status (e.g., Pending, Shipped).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved orders.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Enter your JWT token in the format: Bearer <token>"
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or payload.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid authentication token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Authenticated, but lacks required admin privileges.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: An unexpected error occurred on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # Standardized Enterprise Error Model
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "invalid_request_error"
+            message:
+              type: string
+              example: "The provided product ID does not exist."
+            status:
+              type: integer
+              example: 400
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "prod_01H9X"
+        name:
+          type: string
+          example: "Ergonomic Office Chair"
+        price:
+          type: number
+          format: float
+          example: 199.99
+        inStock:
+          type: boolean
+          example: true
+
+    ProductListResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          example: "list"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+
+    CartItemRequest:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          example: "prod_01H9X"
+        quantity:
+          type: integer
+          minimum: 1
+          example: 1
+
+    CartResponse:
+      type: object
+      properties:
+        cartId:
+          type: string
+          example: "cart_882A"
+        itemCount:
+          type: integer
+          example: 3
+        subtotal:
+          type: number
+          format: float
+          example: 599.97
+
+    Order:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: "ord_993B"
+        status:
+          type: string
+          enum: [Pending, Processing, Shipped, Delivered]
+          example: "Processing"
+        totalAmount:
+          type: number
+          format: float
+          example: 599.97
+
+    OrderListResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          example: "list"
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
