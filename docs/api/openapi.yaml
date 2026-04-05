@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: E-Commerce Storefront & B2B Admin API
+  title: E-Commerce ArgoForge & B2B Admin API
   version: 1.0.0
   description: |
     # API Documentation Overview
