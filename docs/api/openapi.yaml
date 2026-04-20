@@ -1,210 +1,298 @@
 openapi: 3.0.3
 info:
-  title: E-Commerce ArgoForge & B2B Admin API
-  version: 1.0.0
+  title: ArgoForge E-Commerce & B2B Admin API
+  version: 1.1.0
   description: |
-    # API Documentation Overview
-    Welcome to the official developer documentation for the E-Commerce Storefront and B2B Admin Platform.
+    Official API surface for the ArgoForge storefront, admin dashboard, B2B
+    portal and supporting edge functions (Razorpay payments, AI negotiation
+    chat). All persistent endpoints are backed by Supabase PostgREST with
+    Row-Level Security; edge functions are Deno runtimes hosted on Supabase.
 
-    ---
-    
-    ## User Story to API Mappings
-    This architecture directly fulfills the project's core business requirements.
-
-    ### Business Owner & Manager (Admin & B2B)
-    | Requirement | Relevant Endpoint | User Story Status |
-    |---|---|---|
-    | **Analytics Dashboard** | `GET /admin/analytics` | Track business growth, seasonal trends, and top SKUs. |
-    | **Product CMS** | `POST /admin/products`, `PUT /admin/products/{id}` | Easily add, edit, or remove inventory. |
-    | **B2B PDF Catalog** | `GET /b2b/catalog/pdf` | Resellers download wholesale pricing tiers instantly. |
-    | **Automated Invoices** | `GET /orders/{id}/invoice` | Tax-compliant invoice generation upon confirmation. |
-    | **Fulfillment & Tracking** | `PATCH /admin/orders/{id}/status` | Attach courier links; automate customer updates. |
-
-    ### Customer / Shopper (Storefront)
-    | Requirement | Relevant Endpoint | User Story Status |
-    |---|---|---|
-    | **Storefront Browsing** | `GET /products` (with filters) | Filter by room, material, price, and view 24/7. |
-    | **Rich Product Details** | `GET /products/{id}` | View videos, close-ups, and exact scale/color. |
-    | **Similar Items Engine** | `GET /products/{id}/recommendations` | Cross-sell and up-sell via complementary products. |
-    | **Bulk Order Chat** | `POST /support/inquiries` | Negotiate large/B2B purchases directly with sales. |
-
+    ## Authentication
+    - Public reads use the Supabase anon key.
+    - Authenticated requests pass a Supabase JWT via `Authorization: Bearer <token>`.
+    - Admin endpoints require the caller to hold the `admin` role in `user_roles`.
   contact:
-    name: Engineering Team
-    email: api-support@yourcompany.com
+    name: ArgoForge Engineering
+    email: api-support@argoforge.example
 
 servers:
-  - url: https://api.yourcompany.com/v1
-    description: Production Environment
-  - url: http://localhost:8000/api
-    description: Local Development Environment
+  - url: https://brdtmlcwzrmoczemalbd.supabase.co/rest/v1
+    description: Supabase PostgREST (production)
+  - url: https://brdtmlcwzrmoczemalbd.supabase.co/functions/v1
+    description: Supabase Edge Functions (production)
 
 tags:
-  - name: Storefront Catalog
-    description: Customer-facing product discovery and filtering.
-  - name: Orders & Cart
-    description: Cart management and checkout flow.
-  - name: Admin CMS
-    description: Back-office product and inventory management.
-  - name: Admin Operations
-    description: Order fulfillment, analytics, and financials.
-  - name: B2B & Support
-    description: Wholesale catalogs and customer inquiries.
+  - name: Catalog
+    description: Public product catalog and discovery.
+  - name: Reviews
+    description: Public product reviews.
+  - name: Promotions
+    description: Active promo codes available to shoppers.
+  - name: Cart & Wishlist
+    description: Authenticated shopper cart and wishlist.
+  - name: Orders
+    description: Customer order history and creation.
+  - name: Account
+    description: Profiles, addresses and roles.
+  - name: Support
+    description: Public contact and B2B inquiry intake.
+  - name: Admin
+    description: Admin-only management endpoints.
+  - name: Payments
+    description: Razorpay payment edge functions.
+  - name: AI
+    description: AI-powered negotiation chat edge function.
 
 paths:
   /products:
     get:
-      tags: [Storefront Catalog]
-      summary: List and filter products
-      description: |
-        Retrieves the product catalog. 
-        **User Story Fulfillment:** "I want to filter the catalog by categories like room type, material, color, and price range."
+      tags: [Catalog]
+      summary: List products
+      description: Public read of the product catalog. Supports PostgREST filters such as `category=eq.Furniture`, `price=lte.500`, `order=price.asc`, `limit=20`.
       parameters:
-        - name: category
-          in: query
-          schema: { type: string }
-        - name: maxPrice
-          in: query
-          schema: { type: number }
+        - { name: select, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string } }
+        - { name: room, in: query, schema: { type: string } }
+        - { name: order, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
       responses:
         '200':
-          description: A list of products.
+          description: Array of products.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/ProductList'
+              schema: { $ref: '#/components/schemas/ProductList' }
 
-  /products/{id}:
+  /products?slug=eq.{slug}:
     get:
-      tags: [Storefront Catalog]
-      summary: Get product details
-      description: |
-        Retrieves rich product data, including high-quality video links and image close-ups.
-        **User Story Fulfillment:** "I want to view high-quality product videos, and detailed close-ups."
+      tags: [Catalog]
+      summary: Get product by slug
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+        - { name: slug, in: path, required: true, schema: { type: string } }
       responses:
         '200':
-          description: Detailed product data.
+          description: Single product (array of length 1).
 
-  /products/{id}/recommendations:
+  /complementary_products:
     get:
-      tags: [Storefront Catalog]
-      summary: Get complementary items
-      description: |
-        **User Story Fulfillment:** "I want an automated product recommendation engine that displays 'Similar Items' and 'Complementary Products'."
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
+      tags: [Catalog]
+      summary: List complementary product mappings
       responses:
-        '200':
-          description: List of recommended products.
+        '200': { description: Mappings between products and their complements. }
+
+  /reviews:
+    get:
+      tags: [Reviews]
+      summary: List reviews
+      parameters:
+        - { name: product_id, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Reviews list. }
+    post:
+      tags: [Reviews]
+      summary: Create a review (authenticated)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReviewInput' }
+      responses:
+        '201': { description: Review created. }
+
+  /promo_codes:
+    get:
+      tags: [Promotions]
+      summary: List active promo codes
+      description: RLS restricts public reads to rows where `active = true`.
+      responses:
+        '200': { description: Active promo codes. }
+
+  /cart_items:
+    get:
+      tags: [Cart & Wishlist]
+      summary: Read own cart
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Authenticated user's cart rows. }
+    post:
+      tags: [Cart & Wishlist]
+      summary: Add item to cart
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Cart item created. }
+
+  /wishlist_items:
+    get:
+      tags: [Cart & Wishlist]
+      summary: Read own wishlist
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Wishlist rows. }
 
   /orders:
-    post:
-      tags: [Orders & Cart]
-      summary: Place an order
-      description: |
-        Converts a cart session into a confirmed order.
-        **User Story Fulfillment:** "I want a fully functional storefront so customers can place orders 24/7."
-      responses:
-        '201':
-          description: Order placed successfully.
-
-  /orders/{id}/invoice:
     get:
-      tags: [Orders & Cart]
-      summary: Download Tax Invoice
-      description: |
-        **User Story Fulfillment:** "I want automated, tax-compliant invoice generation and email dispatch."
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: PDF Invoice binary stream.
-          content:
-            application/pdf:
-              schema: { type: string, format: binary }
-
-  /support/inquiries:
-    post:
-      tags: [B2B & Support]
-      summary: Submit bulk/high-value inquiry
-      description: |
-        **User Story Fulfillment:** "I want an integrated chat feature for bulk or high-value orders to negotiate pricing."
-      responses:
-        '201':
-          description: Inquiry sent to sales team.
-
-  /b2b/catalog/pdf:
-    get:
-      tags: [B2B & Support]
-      summary: Download Wholesale Catalog
-      description: |
-        **User Story Fulfillment:** "I want a feature for B2B clients and bulk buyers to download a comprehensive, dynamically updated PDF catalog."
-      responses:
-        '200':
-          description: PDF Catalog binary stream.
-          content:
-            application/pdf:
-              schema: { type: string, format: binary }
-
-  /admin/analytics:
-    get:
-      tags: [Admin Operations]
-      summary: Get business metrics
+      tags: [Orders]
+      summary: List own orders
       security: [{ bearerAuth: [] }]
-      description: |
-        **User Story Fulfillment:** "I want a centralized analytics dashboard displaying metrics like sales, revenue, and top-selling SKUs."
+      responses:
+        '200': { description: Orders for the authenticated user. }
+    post:
+      tags: [Orders]
+      summary: Create an order
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderInput' }
+      responses:
+        '201': { description: Order created. }
+
+  /order_items:
+    get:
+      tags: [Orders]
+      summary: List items for own orders
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Order items the user has access to. }
+
+  /addresses:
+    get:
+      tags: [Account]
+      summary: List own addresses
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Addresses. }
+
+  /profiles:
+    get:
+      tags: [Account]
+      summary: Read profile
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Profile row for the caller. }
+
+  /user_roles:
+    get:
+      tags: [Account]
+      summary: Read own role
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Role rows visible to the caller. }
+
+  /contact_messages:
+    post:
+      tags: [Support]
+      summary: Submit a contact message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactMessage' }
+      responses:
+        '201': { description: Message stored. }
+
+  /b2b_inquiries:
+    post:
+      tags: [Support]
+      summary: Submit a B2B inquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/B2BInquiry' }
+      responses:
+        '201': { description: Inquiry stored with status `new`. }
+
+  /admin_emails:
+    get:
+      tags: [Admin]
+      summary: List admin emails (admin only)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Admin email allowlist. }
+
+  /razorpay-create-order:
+    post:
+      tags: [Payments]
+      summary: Create Razorpay order
+      security: [{ bearerAuth: [] }]
+      description: Server-side creation of a Razorpay order using the project's secret key. Returns the order id required by the client SDK.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:   { type: number, description: Amount in major units (e.g. INR rupees). }
+                currency: { type: string, default: INR }
       responses:
         '200':
-          description: Aggregated analytics data.
+          description: Order created.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AnalyticsDashboard'
+                type: object
+                properties:
+                  orderId:  { type: string }
+                  amount:   { type: integer, description: Amount in paise. }
+                  currency: { type: string }
+                  keyId:    { type: string }
+        '401': { description: Unauthorized. }
+        '502': { description: Razorpay upstream error. }
 
-  /admin/products:
+  /razorpay-verify-payment:
     post:
-      tags: [Admin CMS]
-      summary: Add new product
+      tags: [Payments]
+      summary: Verify Razorpay payment signature
       security: [{ bearerAuth: [] }]
-      description: |
-        **User Story Fulfillment:** "I want an intuitive CMS to easily add, edit, or remove products."
-      responses:
-        '201':
-          description: Product created.
-
-  /admin/orders/{id}/status:
-    patch:
-      tags: [Admin Operations]
-      summary: Update fulfillment and tracking
-      security: [{ bearerAuth: [] }]
-      description: |
-        **User Story Fulfillment:** "I want the ability to update order fulfillment statuses and attach courier tracking links."
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
       requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [razorpay_order_id, razorpay_payment_id, razorpay_signature]
+              properties:
+                razorpay_order_id:   { type: string }
+                razorpay_payment_id: { type: string }
+                razorpay_signature:  { type: string }
+      responses:
+        '200':
+          description: Signature valid.
+          content:
+            application/json:
+              schema: { type: object, properties: { valid: { type: boolean } } }
+        '400': { description: Missing fields or invalid signature. }
+        '401': { description: Unauthorized. }
+
+  /negotiation-chat:
+    post:
+      tags: [AI]
+      summary: AI sales negotiation chat (streaming)
+      security: [{ bearerAuth: [] }]
+      description: Server-sent stream of AI tokens used by the storefront chat widget.
+      requestBody:
+        required: true
         content:
           application/json:
             schema:
               type: object
               properties:
-                status: { type: string, enum: [Pending, Shipped, Delivered] }
-                trackingUrl: { type: string }
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:    { type: string, enum: [user, assistant, system] }
+                      content: { type: string }
       responses:
-        '200':
-          description: Order status updated.
+        '200': { description: text/event-stream of AI tokens. }
+        '402': { description: Payment required (AI gateway credits exhausted). }
+        '429': { description: Rate limited. }
 
 components:
   securitySchemes:
@@ -214,22 +302,48 @@ components:
       bearerFormat: JWT
 
   schemas:
-    ProductList:
-      type: array
-      items:
-        type: object
-        properties:
-          id: { type: string }
-          name: { type: string }
-          price: { type: number }
-          media: 
-            type: array
-            items: { type: string }
-    AnalyticsDashboard:
+    Product:
       type: object
       properties:
-        totalRevenue: { type: number }
-        activeOrders: { type: integer }
-        topSkus:
-          type: array
-          items: { type: string }
+        id:          { type: string, format: uuid }
+        name:        { type: string }
+        slug:        { type: string }
+        price:       { type: number }
+        category:    { type: string }
+        image_url:   { type: string }
+        stock:       { type: integer }
+    ProductList:
+      type: array
+      items: { $ref: '#/components/schemas/Product' }
+    ReviewInput:
+      type: object
+      required: [product_id, rating]
+      properties:
+        product_id: { type: string, format: uuid }
+        rating:     { type: integer, minimum: 1, maximum: 5 }
+        text:       { type: string }
+    OrderInput:
+      type: object
+      properties:
+        subtotal: { type: number }
+        tax:      { type: number }
+        discount: { type: number }
+        total:    { type: number }
+        shipping_address: { type: object }
+    ContactMessage:
+      type: object
+      required: [name, email]
+      properties:
+        name:    { type: string }
+        email:   { type: string, format: email }
+        subject: { type: string }
+        message: { type: string }
+    B2BInquiry:
+      type: object
+      required: [company_name, email]
+      properties:
+        company_name: { type: string }
+        contact_name: { type: string }
+        email:        { type: string, format: email }
+        phone:        { type: string }
+        message:      { type: string }
