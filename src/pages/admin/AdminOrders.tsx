@@ -21,8 +21,8 @@ const AdminOrders = () => {
 
   const handleSave = async () => {
     if (!selectedOrderId) return;
-    const updates: Record<string, unknown> = {};
-    if (newStatus) updates.status = newStatus;
+    const updates: { status?: "processing" | "shipped" | "delivered" | "cancelled"; tracking_link?: string } = {};
+    if (newStatus) updates.status = newStatus as "processing" | "shipped" | "delivered" | "cancelled";
     if (trackingLink) updates.tracking_link = trackingLink;
 
     const { error } = await supabase.from("orders").update(updates).eq("id", selectedOrderId);

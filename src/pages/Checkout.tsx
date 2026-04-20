@@ -41,10 +41,8 @@ const Checkout = () => {
   const tax = (subtotal - discount) * 0.16;
   const total = subtotal - discount + tax;
 
-  const handlePlaceOrder = async () => {
-    if (!user) return;
-    setLoading(true);
-
+  const finalizeOrder = async () => {
+    if (!user) return null;
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
@@ -58,14 +56,10 @@ const Checkout = () => {
       })
       .select("id")
       .single();
-
-    if (orderError) {
-      toast.error("Failed to place order");
-      setLoading(false);
-      return;
+    if (orderError || !order) {
+      toast.error("Failed to save order");
+      return null;
     }
-
-    // Insert order items
     const orderItems = cartItems.map((item) => ({
       order_id: order.id,
       product_id: item.product_id,
@@ -73,21 +67,78 @@ const Checkout = () => {
       quantity: item.quantity,
       unit_price: Number(item.product.price),
     }));
-
     const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
     if (itemsError) {
       toast.error("Failed to save order items");
+      return null;
+    }
+    await clearCart.mutateAsync();
+    queryClient.invalidateQueries({ queryKey: ["orders"] });
+    return order.id as string;
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      toast.error("Please sign in to checkout");
+      return;
+    }
+    if (!(window as any).Razorpay) {
+      toast.error("Payment library not loaded. Please refresh.");
+      return;
+    }
+    setLoading(true);
+
+    // 1. Create Razorpay order on backend
+    const { data: orderData, error: orderErr } = await supabase.functions.invoke(
+      "razorpay-create-order",
+      { body: { amount: Number(total.toFixed(2)), currency: "INR" } },
+    );
+    if (orderErr || !orderData?.orderId) {
+      toast.error(orderData?.error || "Could not start payment");
       setLoading(false);
       return;
     }
 
-    // Clear cart
-    await clearCart.mutateAsync();
-    queryClient.invalidateQueries({ queryKey: ["orders"] });
-
-    setOrderId(order.id);
-    setLoading(false);
-    setComplete(true);
+    // 2. Open Razorpay checkout
+    const rzp = new (window as any).Razorpay({
+      key: orderData.keyId,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: "Wood Nest Forge",
+      description: "Order payment",
+      order_id: orderData.orderId,
+      prefill: {
+        name: `${firstName} ${lastName}`.trim(),
+        email: user.email,
+      },
+      theme: { color: "#000000" },
+      handler: async (response: any) => {
+        // 3. Verify signature on backend
+        const { data: verifyData, error: verifyErr } = await supabase.functions.invoke(
+          "razorpay-verify-payment",
+          { body: response },
+        );
+        if (verifyErr || !verifyData?.valid) {
+          toast.error("Payment verification failed");
+          setLoading(false);
+          return;
+        }
+        // 4. Persist order
+        const id = await finalizeOrder();
+        if (id) {
+          setOrderId(id);
+          setComplete(true);
+        }
+        setLoading(false);
+      },
+      modal: {
+        ondismiss: () => {
+          toast.info("Payment cancelled");
+          setLoading(false);
+        },
+      },
+    });
+    rzp.open();
   };
 
   const applyPromo = async () => {
@@ -206,11 +257,12 @@ const Checkout = () => {
                 )}
                 {step === 1 && (
                   <>
-                    <h2 className="font-display text-xl">Payment Details</h2>
-                    <div><label className="text-sm font-medium">Card Number</label><Input className="mt-1 border-none input-shadow focus:input-shadow-focus tabular-nums" placeholder="4242 4242 4242 4242" /></div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div><label className="text-sm font-medium">Expiry</label><Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="MM / YY" /></div>
-                      <div><label className="text-sm font-medium">CVC</label><Input className="mt-1 border-none input-shadow focus:input-shadow-focus" placeholder="123" /></div>
+                    <h2 className="font-display text-xl">Payment</h2>
+                    <div className="p-4 rounded-lg bg-muted/50 text-sm space-y-2">
+                      <p className="font-medium">Secure payment powered by Razorpay</p>
+                      <p className="text-muted-foreground text-xs">
+                        You'll be redirected to Razorpay's secure checkout in the next step. Test cards work in test mode (e.g. 4111 1111 1111 1111, any future expiry, any CVV).
+                      </p>
                     </div>
                     <div className="flex gap-3 mt-4">
                       <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
@@ -237,7 +289,7 @@ const Checkout = () => {
                       <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
                       <Button variant="hero" className="flex-1" onClick={handlePlaceOrder} disabled={loading}>
                         {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        {loading ? "Processing…" : "Place Order"}
+                        {loading ? "Processing…" : `Pay ₹${total.toFixed(2)}`}
                       </Button>
                     </div>
                   </>
