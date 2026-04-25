@@ -49,6 +49,7 @@ const AdminOrders = () => {
                 <thead>
                   <tr className="border-b border-border/50">
                     <th className="text-left font-medium text-muted-foreground p-4 text-xs uppercase tracking-wider">Order</th>
+                    <th className="text-left font-medium text-muted-foreground p-4 text-xs uppercase tracking-wider">Customer</th>
                     <th className="text-left font-medium text-muted-foreground p-4 text-xs uppercase tracking-wider">Items</th>
                     <th className="text-left font-medium text-muted-foreground p-4 text-xs uppercase tracking-wider">Date</th>
                     <th className="text-right font-medium text-muted-foreground p-4 text-xs uppercase tracking-wider">Total</th>
@@ -59,7 +60,8 @@ const AdminOrders = () => {
                   {(orders ?? []).map((order) => (
                     <tr key={order.id} className="border-b border-border/30 last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => { setSelectedOrderId(order.id); setNewStatus(order.status); setTrackingLink(order.tracking_link || ""); }}>
                       <td className="p-4 font-medium">{order.id.slice(0, 8)}</td>
-                      <td className="p-4 text-muted-foreground text-xs">{order.items.map((i) => i.product_name).join(", ")}</td>
+                      <td className="p-4 text-muted-foreground">{order.customer?.full_name || "Guest"}</td>
+                      <td className="p-4 text-muted-foreground text-xs max-w-[240px] truncate">{order.items.map((i) => `${i.product_name} ×${i.quantity}`).join(", ")}</td>
                       <td className="p-4 text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
                       <td className="p-4 text-right tabular-nums">₹{Number(order.total).toLocaleString()}</td>
                       <td className="p-4 text-right">
