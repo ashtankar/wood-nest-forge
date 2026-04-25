@@ -132,7 +132,7 @@ const ProductDetail = () => {
                   onClick={() => setCurrentImage(i)}
                   className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${currentImage === i ? "border-primary" : "border-transparent"}`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }} />
                 </button>
               ))}
             </div>
