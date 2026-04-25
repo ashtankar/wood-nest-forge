@@ -287,6 +287,7 @@ export type Database = {
       }
       products: {
         Row: {
+          catalogue_url: string
           category: string
           color: string
           created_at: string
@@ -309,6 +310,7 @@ export type Database = {
           weight: string
         }
         Insert: {
+          catalogue_url?: string
           category?: string
           color?: string
           created_at?: string
@@ -331,6 +333,7 @@ export type Database = {
           weight?: string
         }
         Update: {
+          catalogue_url?: string
           category?: string
           color?: string
           created_at?: string

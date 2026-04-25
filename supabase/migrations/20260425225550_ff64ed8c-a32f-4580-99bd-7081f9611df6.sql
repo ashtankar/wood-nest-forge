@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS catalogue_url text NOT NULL DEFAULT '';
