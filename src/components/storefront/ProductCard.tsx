@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { DbProduct } from "@/hooks/useProducts";
 import { motion } from "framer-motion";
@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
+import { formatPrice, productImage } from "@/lib/format";
 
 interface ProductCardProps {
   product: DbProduct;
@@ -37,10 +38,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         <div className="relative overflow-hidden rounded-[16px] card-shadow bg-card">
           <div className="aspect-square overflow-hidden rounded-[12px] m-1.5">
             <img
-              src={product.image_url}
+              src={productImage(product.image_url)}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
             />
           </div>
 
@@ -109,14 +111,30 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
           <h3 className="font-body font-medium text-sm text-foreground">{product.name}</h3>
         </Link>
         <p className="text-xs text-muted-foreground mt-0.5">{product.material} · {product.category}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="font-body font-semibold text-sm tabular-nums">
-            €{Number(product.price).toLocaleString()}
-          </span>
-          {product.original_price && (
-            <span className="text-xs text-muted-foreground line-through tabular-nums">
-              €{Number(product.original_price).toLocaleString()}
+        <div className="flex items-center justify-between gap-2 mt-1">
+          <div className="flex items-center gap-2">
+            <span className="font-body font-semibold text-sm tabular-nums">
+              {formatPrice(product.price)}
             </span>
+            {product.original_price && (
+              <span className="text-xs text-muted-foreground line-through tabular-nums">
+                {formatPrice(product.original_price)}
+              </span>
+            )}
+          </div>
+          {product.catalogue_url && (
+            <a
+              href={product.catalogue_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline shrink-0"
+              aria-label={`Download catalogue for ${product.name}`}
+            >
+              <FileDown className="h-3.5 w-3.5" />
+              Catalogue
+            </a>
           )}
         </div>
       </div>
