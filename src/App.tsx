@@ -20,7 +20,7 @@ import Sustainability from "./pages/Sustainability";
 import Press from "./pages/Press";
 import CareGuide from "./pages/CareGuide";
 import ShippingReturns from "./pages/ShippingReturns";
-import AdminOverview from "./pages/admin/AdminOverview";
+import BusinessDashboard from "./pages/admin/BusinessDashboard";
 import AdminFinancials from "./pages/admin/AdminFinancials";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -52,7 +52,7 @@ const App = () => (
             <Route path="/care-guide" element={<CareGuide />} />
             <Route path="/shipping-returns" element={<ShippingReturns />} />
             <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminOverview /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><BusinessDashboard /></ProtectedRoute>} />
             <Route path="/admin/financials" element={<ProtectedRoute requiredRole="admin"><AdminFinancials /></ProtectedRoute>} />
             <Route path="/admin/products" element={<ProtectedRoute requiredRole="admin"><AdminProducts /></ProtectedRoute>} />
             <Route path="/admin/orders" element={<ProtectedRoute requiredRole="admin"><AdminOrders /></ProtectedRoute>} />
