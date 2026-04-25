@@ -77,8 +77,8 @@ const Shop = () => {
         <h4 className="font-body font-semibold text-sm">Price Range</h4>
         <Slider min={0} max={maxPrice} step={100} value={priceRange} onValueChange={setPriceRange} />
         <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
-          <span>€{priceRange[0]}</span>
-          <span>€{priceRange[1]}</span>
+          <span>₹{priceRange[0]}</span>
+          <span>₹{priceRange[1]}</span>
         </div>
       </div>
       {activeFilterCount > 0 && (

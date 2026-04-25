@@ -41,15 +41,15 @@ const AdminFinancials = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-5 rounded-[16px] bg-card card-shadow">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Gross Revenue</p>
-            <p className="font-display text-3xl tabular-nums mt-2">€{grossRevenue.toLocaleString()}</p>
+            <p className="font-display text-3xl tabular-nums mt-2">₹{grossRevenue.toLocaleString()}</p>
           </div>
           <div className="p-5 rounded-[16px] bg-card card-shadow">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Tax Collected</p>
-            <p className="font-display text-3xl tabular-nums mt-2">€{totalTax.toLocaleString()}</p>
+            <p className="font-display text-3xl tabular-nums mt-2">₹{totalTax.toLocaleString()}</p>
           </div>
           <div className="p-5 rounded-[16px] bg-card card-shadow">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Net Revenue</p>
-            <p className="font-display text-3xl tabular-nums mt-2">€{netRevenue.toLocaleString()}</p>
+            <p className="font-display text-3xl tabular-nums mt-2">₹{netRevenue.toLocaleString()}</p>
           </div>
         </div>
 
@@ -76,9 +76,9 @@ const AdminFinancials = () => {
                       <tr key={order.id} className="border-b border-border/30 last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="p-4 text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
                         <td className="p-4 font-medium">{order.id.slice(0, 8)}</td>
-                        <td className="p-4 text-right tabular-nums">€{Number(order.total).toLocaleString()}</td>
-                        <td className="p-4 text-right tabular-nums">€{Number(order.tax).toLocaleString()}</td>
-                        <td className="p-4 text-right tabular-nums">€{(Number(order.total) - Number(order.tax)).toLocaleString()}</td>
+                        <td className="p-4 text-right tabular-nums">₹{Number(order.total).toLocaleString()}</td>
+                        <td className="p-4 text-right tabular-nums">₹{Number(order.tax).toLocaleString()}</td>
+                        <td className="p-4 text-right tabular-nums">₹{(Number(order.total) - Number(order.tax)).toLocaleString()}</td>
                         <td className="p-4 text-right">
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                             order.status === "delivered" ? "bg-primary/10 text-primary" :
@@ -94,9 +94,9 @@ const AdminFinancials = () => {
                   <tfoot>
                     <tr className="border-t-2 border-border bg-muted/30">
                       <td className="p-4 font-medium" colSpan={2}>Totals</td>
-                      <td className="p-4 text-right font-medium tabular-nums">€{grossRevenue.toLocaleString()}</td>
-                      <td className="p-4 text-right font-medium tabular-nums">€{totalTax.toLocaleString()}</td>
-                      <td className="p-4 text-right font-medium tabular-nums">€{netRevenue.toLocaleString()}</td>
+                      <td className="p-4 text-right font-medium tabular-nums">₹{grossRevenue.toLocaleString()}</td>
+                      <td className="p-4 text-right font-medium tabular-nums">₹{totalTax.toLocaleString()}</td>
+                      <td className="p-4 text-right font-medium tabular-nums">₹{netRevenue.toLocaleString()}</td>
                       <td className="p-4"></td>
                     </tr>
                   </tfoot>

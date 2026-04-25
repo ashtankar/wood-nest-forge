@@ -34,7 +34,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
               <div className="flex-1 min-w-0">
                 <h4 className="font-body font-medium text-sm truncate">{item.product.name}</h4>
                 <p className="text-muted-foreground text-sm tabular-nums">
-                  €{Number(item.product.price).toLocaleString()}
+                  ₹{Number(item.product.price).toLocaleString()}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Button
@@ -65,7 +65,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         <div className="border-t pt-4 space-y-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium tabular-nums">€{subtotal.toLocaleString()}</span>
+            <span className="font-medium tabular-nums">₹{subtotal.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Shipping</span>

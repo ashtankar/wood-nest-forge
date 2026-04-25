@@ -164,7 +164,7 @@ export function StorefrontHeader() {
                     <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded object-cover" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">€{product.price}</p>
+                      <p className="text-xs text-muted-foreground">₹{product.price}</p>
                     </div>
                   </Link>
                 ))}

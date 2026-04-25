@@ -104,7 +104,7 @@ const AdminPromos = () => {
                     <tr key={promo.id} className="border-b border-border/30 last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="p-4 font-medium font-mono text-sm">{promo.code}</td>
                       <td className="p-4 text-muted-foreground capitalize">{promo.type}</td>
-                      <td className="p-4 text-right tabular-nums">{promo.type === "percentage" ? `${promo.value}%` : `€${promo.value}`}</td>
+                      <td className="p-4 text-right tabular-nums">{promo.type === "percentage" ? `${promo.value}%` : `₹${promo.value}`}</td>
                       <td className="p-4 text-right tabular-nums">{promo.usage_count} uses</td>
                       <td className="p-4 text-muted-foreground">{promo.expires_at ? new Date(promo.expires_at).toLocaleDateString() : "—"}</td>
                       <td className="p-4 text-right">

@@ -21,11 +21,11 @@ const ShippingReturns = () => (
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-foreground font-medium">EU Countries</span>
-                <span>€49 — 7–14 business days</span>
+                <span>₹49 — 7–14 business days</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-foreground font-medium">UK & Switzerland</span>
-                <span>€89 — 10–18 business days</span>
+                <span>₹89 — 10–18 business days</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-foreground font-medium">Rest of World</span>
@@ -51,7 +51,7 @@ const ShippingReturns = () => (
             </p>
             <ul className="list-disc list-inside space-y-1 text-sm">
               <li>Items must be in original condition, free from damage or heavy use.</li>
-              <li>Return shipping is arranged by AlgoForge; a flat fee of €79 applies for EU returns.</li>
+              <li>Return shipping is arranged by AlgoForge; a flat fee of ₹79 applies for EU returns.</li>
               <li>Refunds are processed within 5–7 business days of receiving the returned item.</li>
               <li>Custom or made-to-order pieces are final sale and cannot be returned.</li>
             </ul>

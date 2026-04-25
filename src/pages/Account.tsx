@@ -118,7 +118,7 @@ const Account = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium tabular-nums">€{Number(order.total).toLocaleString()}</p>
+                        <p className="font-medium tabular-nums">₹{Number(order.total).toLocaleString()}</p>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium mt-1 inline-block ${
                           order.status === "delivered" ? "bg-primary/10 text-primary" :
                           order.status === "shipped" ? "bg-blue-50 text-blue-700" :

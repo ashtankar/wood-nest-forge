@@ -163,7 +163,7 @@ const Checkout = () => {
     setPromoValue(Number(data.value));
     setPromoType(data.type as "percentage" | "flat");
     setPromoCodeId(data.id);
-    toast.success(`Promo code applied: ${data.type === "percentage" ? `${data.value}% off` : `€${data.value} off`}`);
+    toast.success(`Promo code applied: ${data.type === "percentage" ? `${data.value}% off` : `₹${data.value} off`}`);
   };
 
   if (complete) {
@@ -185,7 +185,7 @@ const Checkout = () => {
             </p>
             <div className="p-5 rounded-[16px] bg-card card-shadow text-left space-y-2">
               <p className="text-sm"><span className="text-muted-foreground">Order ID:</span> {orderId.slice(0, 8)}</p>
-              <p className="text-sm"><span className="text-muted-foreground">Total:</span> <span className="tabular-nums">€{total.toFixed(2)}</span></p>
+              <p className="text-sm"><span className="text-muted-foreground">Total:</span> <span className="tabular-nums">₹{total.toFixed(2)}</span></p>
               <p className="text-sm"><span className="text-muted-foreground">Estimated delivery:</span> 5–7 business days</p>
             </div>
           </motion.div>
@@ -281,7 +281,7 @@ const Checkout = () => {
                             <p className="text-sm font-medium">{item.product.name}</p>
                             <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                           </div>
-                          <p className="text-sm font-medium tabular-nums">€{(Number(item.product.price) * item.quantity).toLocaleString()}</p>
+                          <p className="text-sm font-medium tabular-nums">₹{(Number(item.product.price) * item.quantity).toLocaleString()}</p>
                         </div>
                       ))}
                     </div>
@@ -304,7 +304,7 @@ const Checkout = () => {
               {cartItems.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{item.product.name} × {item.quantity}</span>
-                  <span className="tabular-nums">€{(Number(item.product.price) * item.quantity).toLocaleString()}</span>
+                  <span className="tabular-nums">₹{(Number(item.product.price) * item.quantity).toLocaleString()}</span>
                 </div>
               ))}
               <div className="border-t pt-3 mt-3">
@@ -315,20 +315,20 @@ const Checkout = () => {
                 {promoApplied && (
                   <div className="flex justify-between text-sm text-primary mb-1">
                     <span>Discount</span>
-                    <span className="tabular-nums">-€{discount.toFixed(2)}</span>
+                    <span className="tabular-nums">-₹{discount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="tabular-nums">€{(subtotal - discount).toFixed(2)}</span>
+                  <span className="tabular-nums">₹{(subtotal - discount).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax (16%)</span>
-                  <span className="tabular-nums">€{tax.toFixed(2)}</span>
+                  <span className="tabular-nums">₹{tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-medium mt-2 pt-2 border-t">
                   <span>Total</span>
-                  <span className="tabular-nums">€{total.toFixed(2)}</span>
+                  <span className="tabular-nums">₹{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
