@@ -90,9 +90,23 @@ const AdminOrders = () => {
               <SheetHeader><SheetTitle className="font-display text-xl">{selectedOrder.id.slice(0, 8)}</SheetTitle></SheetHeader>
               <div className="mt-6 space-y-6">
                 <div className="p-4 rounded-lg bg-card card-shadow space-y-2">
+                  <p className="text-sm"><span className="text-muted-foreground">Customer:</span> {selectedOrder.customer?.full_name || "Guest"}</p>
                   <p className="text-sm"><span className="text-muted-foreground">Date:</span> {new Date(selectedOrder.created_at).toLocaleDateString()}</p>
                   <p className="text-sm"><span className="text-muted-foreground">Total:</span> <span className="tabular-nums">₹{Number(selectedOrder.total).toLocaleString()}</span></p>
                   <p className="text-sm"><span className="text-muted-foreground">Tax:</span> <span className="tabular-nums">₹{Number(selectedOrder.tax).toLocaleString()}</span></p>
+                  {selectedOrder.shipping_address && (
+                    <div className="text-sm pt-2 border-t border-border/30">
+                      <span className="text-muted-foreground">Shipping to:</span>
+                      <p className="mt-1 whitespace-pre-line text-xs">
+                        {[
+                          (selectedOrder.shipping_address as any)?.address_line,
+                          (selectedOrder.shipping_address as any)?.city,
+                          (selectedOrder.shipping_address as any)?.postal_code,
+                          (selectedOrder.shipping_address as any)?.country,
+                        ].filter(Boolean).join(", ")}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-sm font-medium mb-2">Items</h3>
