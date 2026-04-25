@@ -61,7 +61,7 @@ const AdminOrders = () => {
                       <td className="p-4 font-medium">{order.id.slice(0, 8)}</td>
                       <td className="p-4 text-muted-foreground text-xs">{order.items.map((i) => i.product_name).join(", ")}</td>
                       <td className="p-4 text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
-                      <td className="p-4 text-right tabular-nums">€{Number(order.total).toLocaleString()}</td>
+                      <td className="p-4 text-right tabular-nums">₹{Number(order.total).toLocaleString()}</td>
                       <td className="p-4 text-right">
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                           order.status === "delivered" ? "bg-primary/10 text-primary" :
@@ -89,15 +89,15 @@ const AdminOrders = () => {
               <div className="mt-6 space-y-6">
                 <div className="p-4 rounded-lg bg-card card-shadow space-y-2">
                   <p className="text-sm"><span className="text-muted-foreground">Date:</span> {new Date(selectedOrder.created_at).toLocaleDateString()}</p>
-                  <p className="text-sm"><span className="text-muted-foreground">Total:</span> <span className="tabular-nums">€{Number(selectedOrder.total).toLocaleString()}</span></p>
-                  <p className="text-sm"><span className="text-muted-foreground">Tax:</span> <span className="tabular-nums">€{Number(selectedOrder.tax).toLocaleString()}</span></p>
+                  <p className="text-sm"><span className="text-muted-foreground">Total:</span> <span className="tabular-nums">₹{Number(selectedOrder.total).toLocaleString()}</span></p>
+                  <p className="text-sm"><span className="text-muted-foreground">Tax:</span> <span className="tabular-nums">₹{Number(selectedOrder.tax).toLocaleString()}</span></p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium mb-2">Items</h3>
                   {selectedOrder.items.map((item, i) => (
                     <div key={i} className="flex justify-between py-2 border-b border-border/30 last:border-0 text-sm">
                       <span>{item.product_name} × {item.quantity}</span>
-                      <span className="tabular-nums">€{(Number(item.unit_price) * item.quantity).toLocaleString()}</span>
+                      <span className="tabular-nums">₹{(Number(item.unit_price) * item.quantity).toLocaleString()}</span>
                     </div>
                   ))}
                 </div>

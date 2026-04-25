@@ -161,10 +161,10 @@ export function StorefrontHeader() {
                     onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
                     className="flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors"
                   >
-                    <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded object-cover" />
+                    <img src={product.image_url || "/placeholder.svg"} alt={product.name} className="w-10 h-10 rounded object-cover" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">€{product.price}</p>
+                      <p className="text-xs text-muted-foreground">₹{product.price}</p>
                     </div>
                   </Link>
                 ))}

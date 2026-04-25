@@ -21,7 +21,7 @@ const AdminOverview = () => {
   const revenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total), 0);
 
   const stats = [
-    { label: "Revenue (MTD)", value: `€${revenue.toLocaleString()}`, icon: DollarSign },
+    { label: "Revenue (MTD)", value: `₹${revenue.toLocaleString()}`, icon: DollarSign },
     { label: "Orders", value: String((orders ?? []).length), icon: ShoppingCart },
     { label: "Products", value: String((products ?? []).length), icon: Package },
     { label: "Customers", value: String((profiles ?? []).length), icon: Users },
@@ -68,7 +68,7 @@ const AdminOverview = () => {
                       <tr key={order.id} className="border-b border-border/30 last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="p-4 font-medium">{order.id.slice(0, 8)}</td>
                         <td className="p-4 text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</td>
-                        <td className="p-4 text-right tabular-nums">€{Number(order.total).toLocaleString()}</td>
+                        <td className="p-4 text-right tabular-nums">₹{Number(order.total).toLocaleString()}</td>
                         <td className="p-4 text-right">
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                             order.status === "delivered" ? "bg-primary/10 text-primary" :

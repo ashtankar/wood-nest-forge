@@ -2,7 +2,7 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -19,14 +19,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
 
-  // Redirect if already logged in
-  if (user) {
+  // Redirect if already logged in (run as effect to avoid setState during render)
+  useEffect(() => {
+    if (!user) return;
     if (role === "admin") {
       navigate("/admin", { replace: true });
-    } else {
+    } else if (role === "customer") {
       navigate("/account", { replace: true });
     }
-  }
+  }, [user, role, navigate]);
 
   // Business owners can only log in, not sign up
   const effectiveTab = loginType === "business" ? "login" : tab;
