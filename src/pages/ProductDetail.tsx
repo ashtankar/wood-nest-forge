@@ -3,7 +3,8 @@ import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts, useProductBySlug, useComplementaryProducts, useReviews } from "@/hooks/useProducts";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Star, View, ZoomIn, ChevronLeft, ChevronRight, MessageSquare, Phone, Heart, ShoppingBag, Play, Loader2 } from "lucide-react";
+import { Star, View, ZoomIn, ChevronLeft, ChevronRight, MessageSquare, Phone, Heart, ShoppingBag, Play, Loader2, FileDown } from "lucide-react";
+import { formatPrice, productImage } from "@/lib/format";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -53,7 +54,8 @@ const ProductDetail = () => {
   }
 
   const similar = (products ?? []).filter((p) => p.category === product.category && p.id !== product.id);
-  const images = product.images?.length ? product.images : [product.image_url];
+  const rawImages = product.images?.length ? product.images : [product.image_url];
+  const images = rawImages.map(productImage);
 
   const handleSubmitReview = async () => {
     if (!user) { toast.error("Please log in to leave a review"); navigate("/auth"); return; }
@@ -97,6 +99,7 @@ const ProductDetail = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
                 />
               </AnimatePresence>
               <div className="absolute top-4 right-4 flex flex-col gap-2">
@@ -151,9 +154,9 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex items-baseline gap-3">
-              <span className="font-display text-3xl tabular-nums">€{Number(product.price).toLocaleString()}</span>
+              <span className="font-display text-3xl tabular-nums">{formatPrice(product.price)}</span>
               {product.original_price && (
-                <span className="text-lg text-muted-foreground line-through tabular-nums">€{Number(product.original_price).toLocaleString()}</span>
+                <span className="text-lg text-muted-foreground line-through tabular-nums">{formatPrice(product.original_price)}</span>
               )}
             </div>
 
@@ -206,6 +209,15 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex flex-col gap-2">
+              {product.catalogue_url && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.open(product.catalogue_url, "_blank", "noopener,noreferrer")}
+                >
+                  <FileDown className="h-4 w-4 mr-2" /> Download Product Catalogue
+                </Button>
+              )}
               <Button variant="outline" className="w-full justify-start" onClick={() => setBulkPricingOpen(true)}>
                 <MessageSquare className="h-4 w-4 mr-2" /> Request Bulk Pricing
               </Button>
