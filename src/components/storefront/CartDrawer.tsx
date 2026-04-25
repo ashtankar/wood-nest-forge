@@ -27,9 +27,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
           {items.map((item) => (
             <div key={item.id} className="flex gap-4 p-3 rounded-lg bg-card card-shadow">
               <img
-                src={item.product.image_url}
+                src={item.product.image_url || "/placeholder.svg"}
                 alt={item.product.name}
-                className="w-20 h-20 object-cover rounded-md"
+                className="w-20 h-20 object-cover rounded-md bg-muted"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }}
               />
               <div className="flex-1 min-w-0">
                 <h4 className="font-body font-medium text-sm truncate">{item.product.name}</h4>
