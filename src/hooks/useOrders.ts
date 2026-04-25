@@ -50,15 +50,21 @@ export function useAllOrders() {
       const orderIds = orders.map((o) => o.id);
       if (!orderIds.length) return [];
 
-      const { data: items, error: iErr } = await supabase
-        .from("order_items")
-        .select("*")
-        .in("order_id", orderIds);
-      if (iErr) throw iErr;
+      const userIds = Array.from(new Set(orders.map((o) => o.user_id)));
+
+      const [itemsRes, profilesRes] = await Promise.all([
+        supabase.from("order_items").select("*").in("order_id", orderIds),
+        supabase.from("profiles").select("id, full_name").in("id", userIds),
+      ]);
+      if (itemsRes.error) throw itemsRes.error;
+      if (profilesRes.error) throw profilesRes.error;
+
+      const profileMap = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
 
       return orders.map((order) => ({
         ...order,
-        items: (items ?? []).filter((i) => i.order_id === order.id),
+        items: (itemsRes.data ?? []).filter((i) => i.order_id === order.id),
+        customer: profileMap.get(order.user_id) ?? null,
       }));
     },
     enabled: role === "admin",
