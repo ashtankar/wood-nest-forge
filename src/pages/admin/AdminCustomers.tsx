@@ -3,8 +3,11 @@ import { Loader2, ShoppingBag } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminCustomers = () => {
+  const { role } = useAuth();
+  
   const { data, isLoading } = useQuery({
     queryKey: ["admin-customers-with-stats"],
     queryFn: async () => {
@@ -23,15 +26,16 @@ const AdminCustomers = () => {
       return (profilesRes.data ?? []).map((p) => {
         const myOrders = orders.filter((o) => o.user_id === p.id);
         const totalSpent = myOrders.reduce((s, o) => s + Number(o.total), 0);
-        const role = roles.find((r) => r.user_id === p.id)?.role ?? "customer";
+        const userRole = roles.find((r) => r.user_id === p.id)?.role ?? "customer";
         return {
           ...p,
           orderCount: myOrders.length,
           totalSpent,
-          role,
+          role: userRole,
         };
       });
     },
+    enabled: role === "admin", // Waits for admin role confirmation
   });
 
   const customers = data ?? [];
