@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useProducts, type DbProduct } from "@/hooks/useProducts";
-import { Plus, Pencil, Trash2, Loader2, FileDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FileDown, UploadCloud } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,27 +58,95 @@ const toPayload = (f: FormState) => ({
 });
 
 function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f: FormState) => void; products: DbProduct[] }) {
+  const [uploading, setUploading] = useState(false);
+
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
-  // Auto-generate slug when name changes
+  // Auto-generate slug
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newName = e.target.value;
     const newSlug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     setForm({ ...form, name: newName, slug: newSlug });
   };
 
-  // Extract unique values from existing products to populate searchable autocomplete lists
+  // Image Upload Handler
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+      
+      setForm({ ...form, image_url: data.publicUrl });
+      toast.success("Image uploaded successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Smart dropdown lists
   const categories = useMemo(() => Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort(), [products]);
   const rooms = useMemo(() => Array.from(new Set(products.map(p => p.room).filter(Boolean))).sort(), [products]);
   const materials = useMemo(() => Array.from(new Set(products.map(p => p.material).filter(Boolean))).sort(), [products]);
   const colors = useMemo(() => Array.from(new Set(products.map(p => p.color).filter(Boolean))).sort(), [products]);
 
   return (
-    <div className="space-y-4 mt-4">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-5 mt-4">
+      
+      {/* Primary Image Upload Zone */}
+      <div className="border border-border/50 p-4 rounded-xl bg-muted/10">
+        <label className="text-sm font-medium mb-3 block">Primary Product Image</label>
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="h-24 w-24 shrink-0 rounded-lg border border-border/50 bg-muted overflow-hidden flex items-center justify-center card-shadow">
+            {form.image_url ? (
+              <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" />
+            ) : (
+              <UploadCloud className="h-8 w-8 text-muted-foreground/50" />
+            )}
+          </div>
+          <div className="flex-1 w-full space-y-3">
+            <div className="relative">
+              <Input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleFileUpload} 
+                disabled={uploading}
+                className="file:bg-primary file:text-primary-foreground file:border-0 file:rounded-md file:px-4 file:py-1.5 file:mr-4 file:text-xs file:cursor-pointer border border-border/50 shadow-sm bg-background h-12 pt-2 cursor-pointer w-full" 
+              />
+              {uploading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-primary" />}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-[1px] flex-1 bg-border/50"></div>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">OR PASTE URL</span>
+              <div className="h-[1px] flex-1 bg-border/50"></div>
+            </div>
+            <Input 
+              className="border-border/50 input-shadow text-xs" 
+              placeholder="https://example.com/image.jpg" 
+              value={form.image_url} 
+              onChange={set("image_url")} 
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Product Details */}
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">Name</label>
-          <Input className="mt-1 border-none input-shadow" value={form.name} onChange={handleNameChange} placeholder="E.g. Sheesham Sofa" />
+          <Input className="mt-1 border-border/50 input-shadow" value={form.name} onChange={handleNameChange} placeholder="E.g. Sheesham Sofa" />
         </div>
         <div>
           <label className="text-sm font-medium text-muted-foreground flex items-center justify-between">
@@ -87,47 +155,49 @@ function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f
           <Input className="mt-1 border-none bg-muted/50 text-muted-foreground cursor-not-allowed" value={form.slug} readOnly />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div><label className="text-sm font-medium">Price (₹)</label><Input type="number" className="mt-1 border-none input-shadow" value={form.price} onChange={set("price")} /></div>
-        <div><label className="text-sm font-medium">Original (₹)</label><Input type="number" className="mt-1 border-none input-shadow" value={form.original_price} onChange={set("original_price")} /></div>
-        <div><label className="text-sm font-medium">Stock</label><Input type="number" className="mt-1 border-none input-shadow" value={form.stock} onChange={set("stock")} /></div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div><label className="text-sm font-medium">Price (₹)</label><Input type="number" className="mt-1 border-border/50 input-shadow" value={form.price} onChange={set("price")} /></div>
+        <div><label className="text-sm font-medium">Original (₹)</label><Input type="number" className="mt-1 border-border/50 input-shadow" value={form.original_price} onChange={set("original_price")} /></div>
+        <div><label className="text-sm font-medium">Stock</label><Input type="number" className="mt-1 border-border/50 input-shadow" value={form.stock} onChange={set("stock")} /></div>
       </div>
 
-      {/* Smart Inputs: Search existing OR type new */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Smart Attributes */}
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">Category</label>
-          <Input list="category-options" className="mt-1 border-none input-shadow" value={form.category} onChange={set("category")} placeholder="Search or type new..." />
+          <Input list="category-options" className="mt-1 border-border/50 input-shadow" value={form.category} onChange={set("category")} placeholder="Search or type new..." />
           <datalist id="category-options">{categories.map(c => <option key={c as string} value={c as string} />)}</datalist>
         </div>
         <div>
           <label className="text-sm font-medium">Room</label>
-          <Input list="room-options" className="mt-1 border-none input-shadow" value={form.room} onChange={set("room")} placeholder="Search or type new..." />
+          <Input list="room-options" className="mt-1 border-border/50 input-shadow" value={form.room} onChange={set("room")} placeholder="Search or type new..." />
           <datalist id="room-options">{rooms.map(r => <option key={r as string} value={r as string} />)}</datalist>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">Material</label>
-          <Input list="material-options" className="mt-1 border-none input-shadow" value={form.material} onChange={set("material")} placeholder="Search or type new..." />
+          <Input list="material-options" className="mt-1 border-border/50 input-shadow" value={form.material} onChange={set("material")} placeholder="Search or type new..." />
           <datalist id="material-options">{materials.map(m => <option key={m as string} value={m as string} />)}</datalist>
         </div>
         <div>
           <label className="text-sm font-medium">Color</label>
-          <Input list="color-options" className="mt-1 border-none input-shadow" value={form.color} onChange={set("color")} placeholder="Search or type new..." />
+          <Input list="color-options" className="mt-1 border-border/50 input-shadow" value={form.color} onChange={set("color")} placeholder="Search or type new..." />
           <datalist id="color-options">{colors.map(c => <option key={c as string} value={c as string} />)}</datalist>
         </div>
       </div>
 
-      <div><label className="text-sm font-medium">Primary Image URL</label><Input className="mt-1 border-none input-shadow" value={form.image_url} onChange={set("image_url")} /></div>
-      <div><label className="text-sm font-medium">Gallery Images (comma-separated URLs)</label><Input className="mt-1 border-none input-shadow" value={form.images} onChange={set("images")} /></div>
-      <div><label className="text-sm font-medium">Catalogue URL (PDF)</label><Input placeholder="https://example.com/catalogue.pdf" className="mt-1 border-none input-shadow" value={form.catalogue_url} onChange={set("catalogue_url")} /></div>
-      <div><label className="text-sm font-medium">Tags (comma-separated)</label><Input className="mt-1 border-none input-shadow" value={form.tags} onChange={set("tags")} placeholder="E.g. bestseller, new, decor" /></div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><label className="text-sm font-medium">Dimensions</label><Input className="mt-1 border-none input-shadow" value={form.dimensions} onChange={set("dimensions")} placeholder="E.g. 72 W x 36 D x 30 H" /></div>
-        <div><label className="text-sm font-medium">Weight</label><Input className="mt-1 border-none input-shadow" value={form.weight} onChange={set("weight")} placeholder="E.g. 45 kg" /></div>
+      {/* Extra Details */}
+      <div><label className="text-sm font-medium">Gallery Images (comma-separated URLs)</label><Input className="mt-1 border-border/50 input-shadow" value={form.images} onChange={set("images")} /></div>
+      <div><label className="text-sm font-medium">Catalogue URL (PDF)</label><Input placeholder="https://example.com/catalogue.pdf" className="mt-1 border-border/50 input-shadow" value={form.catalogue_url} onChange={set("catalogue_url")} /></div>
+      <div><label className="text-sm font-medium">Tags (comma-separated)</label><Input className="mt-1 border-border/50 input-shadow" value={form.tags} onChange={set("tags")} placeholder="E.g. bestseller, new, decor" /></div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div><label className="text-sm font-medium">Dimensions</label><Input className="mt-1 border-border/50 input-shadow" value={form.dimensions} onChange={set("dimensions")} placeholder="E.g. 72 W x 36 D x 30 H" /></div>
+        <div><label className="text-sm font-medium">Weight</label><Input className="mt-1 border-border/50 input-shadow" value={form.weight} onChange={set("weight")} placeholder="E.g. 45 kg" /></div>
       </div>
-      <div><label className="text-sm font-medium">Description</label><Textarea className="mt-1 border-none input-shadow min-h-[80px]" value={form.description} onChange={set("description")} /></div>
+      <div><label className="text-sm font-medium">Description</label><Textarea className="mt-1 border-border/50 input-shadow min-h-[100px]" value={form.description} onChange={set("description")} /></div>
     </div>
   );
 }
@@ -185,10 +255,10 @@ const AdminProducts = () => {
           </div>
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Add Product</Button></DialogTrigger>
-            <DialogContent className="max-w-lg bg-background max-h-[85vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl bg-background max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="font-display text-xl">Add New Product</DialogTitle></DialogHeader>
               <ProductForm form={form} setForm={setForm} products={allProducts} />
-              <Button variant="hero" className="w-full mt-4" onClick={handleCreate}>Create Product</Button>
+              <Button variant="hero" className="w-full mt-6 h-12" onClick={handleCreate}>Create Product</Button>
             </DialogContent>
           </Dialog>
         </div>
@@ -216,7 +286,7 @@ const AdminProducts = () => {
                       <tr key={product.id} className="border-b border-border/30 last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <img src={productImage(product.image_url)} alt={product.name} className="w-10 h-10 rounded-md object-cover bg-muted" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }} />
+                            <img src={productImage(product.image_url)} alt={product.name} className="w-10 h-10 rounded-md object-cover bg-muted border border-border/50" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/placeholder.svg"; }} />
                             <span className="font-medium">{product.name}</span>
                           </div>
                         </td>
@@ -271,10 +341,10 @@ const AdminProducts = () => {
       </div>
 
       <Dialog open={!!editId} onOpenChange={(v) => !v && setEditId(null)}>
-        <DialogContent className="max-w-lg bg-background max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl bg-background max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display text-xl">Edit {editing?.name ?? "Product"}</DialogTitle></DialogHeader>
           <ProductForm form={editForm} setForm={setEditForm} products={allProducts} />
-          <Button variant="hero" className="w-full mt-4" onClick={handleUpdate}>Save Changes</Button>
+          <Button variant="hero" className="w-full mt-6 h-12" onClick={handleUpdate}>Save Changes</Button>
         </DialogContent>
       </Dialog>
     </AdminLayout>
