@@ -60,7 +60,14 @@ const toPayload = (f: FormState) => ({
 function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f: FormState) => void; products: DbProduct[] }) {
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
 
-  // Extract unique values from existing products to populate autocomplete lists
+  // Auto-generate slug when name changes
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    const newSlug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    setForm({ ...form, name: newName, slug: newSlug });
+  };
+
+  // Extract unique values from existing products to populate searchable autocomplete lists
   const categories = useMemo(() => Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort(), [products]);
   const rooms = useMemo(() => Array.from(new Set(products.map(p => p.room).filter(Boolean))).sort(), [products]);
   const materials = useMemo(() => Array.from(new Set(products.map(p => p.material).filter(Boolean))).sort(), [products]);
@@ -69,8 +76,16 @@ function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f
   return (
     <div className="space-y-4 mt-4">
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="text-sm font-medium">Name</label><Input className="mt-1 border-none input-shadow" value={form.name} onChange={set("name")} /></div>
-        <div><label className="text-sm font-medium">Slug</label><Input className="mt-1 border-none input-shadow" value={form.slug} onChange={set("slug")} /></div>
+        <div>
+          <label className="text-sm font-medium">Name</label>
+          <Input className="mt-1 border-none input-shadow" value={form.name} onChange={handleNameChange} placeholder="E.g. Sheesham Sofa" />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+            Slug <span className="text-[10px] bg-muted px-2 py-0.5 rounded-full">Auto-generated</span>
+          </label>
+          <Input className="mt-1 border-none bg-muted/50 text-muted-foreground cursor-not-allowed" value={form.slug} readOnly />
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div><label className="text-sm font-medium">Price (₹)</label><Input type="number" className="mt-1 border-none input-shadow" value={form.price} onChange={set("price")} /></div>
@@ -78,28 +93,28 @@ function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f
         <div><label className="text-sm font-medium">Stock</label><Input type="number" className="mt-1 border-none input-shadow" value={form.stock} onChange={set("stock")} /></div>
       </div>
 
-      {/* Inputs with Datalist for Autocomplete OR Custom Entry */}
+      {/* Smart Inputs: Search existing OR type new */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium">Category</label>
-          <Input list="category-options" className="mt-1 border-none input-shadow" value={form.category} onChange={set("category")} placeholder="Select or type new..." />
+          <Input list="category-options" className="mt-1 border-none input-shadow" value={form.category} onChange={set("category")} placeholder="Search or type new..." />
           <datalist id="category-options">{categories.map(c => <option key={c as string} value={c as string} />)}</datalist>
         </div>
         <div>
           <label className="text-sm font-medium">Room</label>
-          <Input list="room-options" className="mt-1 border-none input-shadow" value={form.room} onChange={set("room")} placeholder="Select or type new..." />
+          <Input list="room-options" className="mt-1 border-none input-shadow" value={form.room} onChange={set("room")} placeholder="Search or type new..." />
           <datalist id="room-options">{rooms.map(r => <option key={r as string} value={r as string} />)}</datalist>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium">Material</label>
-          <Input list="material-options" className="mt-1 border-none input-shadow" value={form.material} onChange={set("material")} placeholder="Select or type new..." />
+          <Input list="material-options" className="mt-1 border-none input-shadow" value={form.material} onChange={set("material")} placeholder="Search or type new..." />
           <datalist id="material-options">{materials.map(m => <option key={m as string} value={m as string} />)}</datalist>
         </div>
         <div>
           <label className="text-sm font-medium">Color</label>
-          <Input list="color-options" className="mt-1 border-none input-shadow" value={form.color} onChange={set("color")} placeholder="Select or type new..." />
+          <Input list="color-options" className="mt-1 border-none input-shadow" value={form.color} onChange={set("color")} placeholder="Search or type new..." />
           <datalist id="color-options">{colors.map(c => <option key={c as string} value={c as string} />)}</datalist>
         </div>
       </div>
@@ -107,10 +122,10 @@ function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f
       <div><label className="text-sm font-medium">Primary Image URL</label><Input className="mt-1 border-none input-shadow" value={form.image_url} onChange={set("image_url")} /></div>
       <div><label className="text-sm font-medium">Gallery Images (comma-separated URLs)</label><Input className="mt-1 border-none input-shadow" value={form.images} onChange={set("images")} /></div>
       <div><label className="text-sm font-medium">Catalogue URL (PDF)</label><Input placeholder="https://example.com/catalogue.pdf" className="mt-1 border-none input-shadow" value={form.catalogue_url} onChange={set("catalogue_url")} /></div>
-      <div><label className="text-sm font-medium">Tags (comma-separated)</label><Input className="mt-1 border-none input-shadow" value={form.tags} onChange={set("tags")} /></div>
+      <div><label className="text-sm font-medium">Tags (comma-separated)</label><Input className="mt-1 border-none input-shadow" value={form.tags} onChange={set("tags")} placeholder="E.g. bestseller, new, decor" /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="text-sm font-medium">Dimensions</label><Input className="mt-1 border-none input-shadow" value={form.dimensions} onChange={set("dimensions")} /></div>
-        <div><label className="text-sm font-medium">Weight</label><Input className="mt-1 border-none input-shadow" value={form.weight} onChange={set("weight")} /></div>
+        <div><label className="text-sm font-medium">Dimensions</label><Input className="mt-1 border-none input-shadow" value={form.dimensions} onChange={set("dimensions")} placeholder="E.g. 72 W x 36 D x 30 H" /></div>
+        <div><label className="text-sm font-medium">Weight</label><Input className="mt-1 border-none input-shadow" value={form.weight} onChange={set("weight")} placeholder="E.g. 45 kg" /></div>
       </div>
       <div><label className="text-sm font-medium">Description</label><Textarea className="mt-1 border-none input-shadow min-h-[80px]" value={form.description} onChange={set("description")} /></div>
     </div>
@@ -172,7 +187,6 @@ const AdminProducts = () => {
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Add Product</Button></DialogTrigger>
             <DialogContent className="max-w-lg bg-background max-h-[85vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="font-display text-xl">Add New Product</DialogTitle></DialogHeader>
-              {/* Pass products to power the smart autocomplete */}
               <ProductForm form={form} setForm={setForm} products={allProducts} />
               <Button variant="hero" className="w-full mt-4" onClick={handleCreate}>Create Product</Button>
             </DialogContent>
