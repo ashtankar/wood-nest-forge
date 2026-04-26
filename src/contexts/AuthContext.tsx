@@ -26,10 +26,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchRole = async (currentUser: User) => {
     if (currentUser.email) {
-      // 1. Check if the user's email exists in the business owner/admin table
-      // Replace 'admin_emails' with your actual table name if different
+      // 1. Check if the user's email exists in the admin_emails table
       const { data: adminData } = await supabase
-        .from("admin_emails") 
+        .from("admin_emails")
         .select("email")
         .eq("email", currentUser.email)
         .maybeSingle();
@@ -40,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // 2. Fallback to standard user_roles table check
+    // 2. Fallback to standard user_roles table check for customers/others
     const { data } = await supabase
       .from("user_roles")
       .select("role")
