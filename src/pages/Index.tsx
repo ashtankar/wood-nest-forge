@@ -2,11 +2,15 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/hooks/useProducts";
-import { ArrowRight, Loader2, ShieldCheck, Truck, CreditCard, Clock, ChevronRight } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck, Truck, CreditCard, Clock, ChevronRight, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import heroImg from "@/assets/hero-furniture.jpg";
 
-// Photo-circles using Indic-focused keywords (Teak, Sheesham, Ethnic Decor, Cane)
 const CATEGORIES = [
   { name: "Living Room", image: "https://loremflickr.com/200/200/teak,sofa?lock=101", path: "/shop?room=Living+Room" },
   { name: "Bedroom", image: "https://loremflickr.com/200/200/sheesham,bed?lock=102", path: "/shop?room=Bedroom" },
@@ -18,6 +22,11 @@ const CATEGORIES = [
 
 const Index = () => {
   const { data: products, isLoading } = useProducts();
+  
+  // Catalogue State
+  const [catalogueOpen, setCatalogueOpen] = useState(false);
+  const [catEmail, setCatEmail] = useState("");
+  const [catRoom, setCatRoom] = useState("");
 
   const allProducts = products ?? [];
   const deals = allProducts.filter(p => p.original_price && p.original_price > p.price).slice(0, 4);
@@ -27,6 +36,20 @@ const Index = () => {
   const displayDeals = deals.length >= 4 ? deals : allProducts.slice(0, 4);
   const displaySeating = seating.length >= 4 ? seating : allProducts.slice(4, 8);
   const displayDecor = decor.length >= 4 ? decor : allProducts.slice(8, 12);
+
+  const handleDownloadCatalogue = () => {
+    if (!catEmail) return toast.error("Please enter your email address.");
+    if (!catRoom) return toast.error("Please select a category.");
+    
+    toast.success("Preparing your Lookbook...");
+    // Simulate generation delay
+    setTimeout(() => {
+      toast.success("Catalogue downloaded successfully!");
+      setCatalogueOpen(false);
+      setCatEmail("");
+      setCatRoom("");
+    }, 1500);
+  };
 
   return (
     <StorefrontLayout>
@@ -49,7 +72,6 @@ const Index = () => {
       {/* 2. Premium Promotional Hero Banner */}
       <section className="container mx-auto px-4 py-6 md:py-8">
         <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[4/3] md:aspect-[21/7] shadow-xl group">
-          {/* Main hero image - assuming your hero-furniture.jpg is suitable, but you can swap this too */}
           <img src={heroImg} alt="Festive Furniture Sale" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent flex flex-col justify-center px-6 md:px-16">
             <div className="inline-block bg-primary text-primary-foreground font-bold tracking-widest text-[10px] md:text-xs uppercase mb-4 px-3 py-1.5 rounded-sm w-max shadow-sm">
@@ -131,10 +153,9 @@ const Index = () => {
         )}
       </section>
 
-      {/* 5. Photographic Promo Banners (Indic Focused) */}
+      {/* 5. Photographic Promo Banners */}
       <section className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {/* Office/Study Promo */}
           <Link to="/shop?room=Office" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
             <img src="https://loremflickr.com/800/600/teak,desk?lock=201" alt="Home Office" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10">
@@ -144,7 +165,6 @@ const Index = () => {
             </div>
           </Link>
           
-          {/* Ethnic Bedroom/Living Promo */}
           <Link to="/shop?room=Bedroom" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
             <img src="https://loremflickr.com/800/600/indian,bedroom,decor?lock=202" alt="Bedroom" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10">
@@ -172,7 +192,7 @@ const Index = () => {
       </section>
 
       {/* 7. Category Showcase: Decor */}
-      <section className="container mx-auto px-4 py-10 mb-12 bg-muted/20 rounded-3xl">
+      <section className="container mx-auto px-4 py-10 mb-6 bg-muted/20 rounded-3xl">
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <h2 className="font-display text-2xl md:text-3xl font-bold">Handcrafted Decor & Lighting</h2>
           <Link to="/shop?category=Decor" className="text-primary text-sm font-bold hover:underline flex items-center">
@@ -183,6 +203,66 @@ const Index = () => {
           {displayDecor.map((product, i) => (
             <ProductCard key={product.id} product={product} index={i} />
           ))}
+        </div>
+      </section>
+
+      {/* 8. Catalogue Download Section */}
+      <section className="container mx-auto px-4 py-8 mb-16">
+        <div className="bg-primary text-primary-foreground rounded-3xl p-10 md:p-16 flex flex-col items-center text-center relative overflow-hidden shadow-2xl">
+          <div className="relative z-10 max-w-2xl">
+            <BookOpen className="h-12 w-12 mx-auto mb-6 opacity-80" />
+            <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">The 2026 Lookbook</h2>
+            <p className="text-primary-foreground/80 text-base md:text-lg mb-8 font-body">
+              Explore our complete collection of Indic-inspired, handcrafted furniture. Curate your perfect space with our latest designs and exclusive trade pieces.
+            </p>
+            
+            <Dialog open={catalogueOpen} onOpenChange={setCatalogueOpen}>
+              <DialogTrigger asChild>
+                <Button variant="secondary" size="lg" className="rounded-sm px-8 h-14 font-bold shadow-xl text-base">
+                  Download Digital Catalogue
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md bg-background text-foreground border-border/50">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-2xl">Get Your Lookbook</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-5 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Email Address</label>
+                    <Input 
+                      placeholder="Enter your email" 
+                      type="email" 
+                      value={catEmail} 
+                      onChange={(e) => setCatEmail(e.target.value)} 
+                      className="border-border/50 input-shadow"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Which room are you furnishing?</label>
+                    <Select value={catRoom} onValueChange={setCatRoom}>
+                      <SelectTrigger className="border-border/50 input-shadow">
+                        <SelectValue placeholder="Select your primary interest" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Complete Collection</SelectItem>
+                        <SelectItem value="living">Living Room</SelectItem>
+                        <SelectItem value="bedroom">Bedroom</SelectItem>
+                        <SelectItem value="dining">Dining & Kitchen</SelectItem>
+                        <SelectItem value="office">Workspace</SelectItem>
+                        <SelectItem value="outdoor">Outdoor & Patio</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button className="w-full mt-2" onClick={handleDownloadCatalogue}>
+                    Generate & Download PDF
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          {/* Subtle background decoration */}
+          <div className="absolute -top-24 -right-24 h-64 w-64 bg-white opacity-5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-24 -left-24 h-64 w-64 bg-white opacity-5 rounded-full blur-3xl"></div>
         </div>
       </section>
 
