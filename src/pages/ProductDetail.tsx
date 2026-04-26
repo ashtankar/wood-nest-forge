@@ -209,15 +209,18 @@ const ProductDetail = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              {product.catalogue_url && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => window.open(product.catalogue_url, "_blank", "noopener,noreferrer")}
-                >
-                  <FileDown className="h-4 w-4 mr-2" /> Download Product Catalogue
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                disabled={!product.catalogue_url}
+                title={product.catalogue_url ? "Download product catalogue" : "Catalogue coming soon"}
+                onClick={() => {
+                  if (!product.catalogue_url) { toast.info("Catalogue not available yet for this product"); return; }
+                  window.open(product.catalogue_url, "_blank", "noopener,noreferrer");
+                }}
+              >
+                <FileDown className="h-4 w-4 mr-2" /> Download Product Catalogue
+              </Button>
               <Button variant="outline" className="w-full justify-start" onClick={() => setBulkPricingOpen(true)}>
                 <MessageSquare className="h-4 w-4 mr-2" /> Request Bulk Pricing
               </Button>

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ShoppingBag, Heart, Menu, Search, X } from "lucide-react";
+import { ShoppingBag, Heart, Menu, Search, X, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
@@ -20,7 +20,7 @@ const navLinks = [
 export function StorefrontHeader() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const { items: cartItems } = useCart();
   const { data: products } = useProducts();
   const [cartOpen, setCartOpen] = useState(false);
@@ -102,6 +102,17 @@ export function StorefrontHeader() {
 
             {user ? (
               <>
+                {role === "admin" && (
+                  <Link to="/admin">
+                    <Button variant="outline" size="sm" className="text-sm font-body gap-1.5 hidden sm:inline-flex">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Dashboard
+                    </Button>
+                    <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Dashboard">
+                      <LayoutDashboard className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/account?tab=wishlist">
                   <Button variant="ghost" size="icon">
                     <Heart className="h-5 w-5" />

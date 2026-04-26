@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   DollarSign, Package, ShoppingCart, Users, Briefcase, Tag,
-  TrendingUp, ArrowRight, Loader2,
+  TrendingUp, ArrowRight, Loader2, BarChart3,
 } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { useAllOrders } from "@/hooks/useOrders";
@@ -48,6 +48,7 @@ const BusinessDashboard = () => {
   ];
 
   const quickLinks = [
+    { label: "Analytics", href: "/admin/analytics", icon: BarChart3, desc: "Daily, weekly & monthly sales charts" },
     { label: "Manage Products", href: "/admin/products", icon: Package, desc: "Add, edit, or remove inventory" },
     { label: "View Orders", href: "/admin/orders", icon: ShoppingCart, desc: `${pending} pending orders` },
     { label: "Financials", href: "/admin/financials", icon: TrendingUp, desc: "Revenue & tax reports" },

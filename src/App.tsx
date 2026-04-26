@@ -27,6 +27,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminB2B from "./pages/admin/AdminB2B";
 import AdminPromos from "./pages/admin/AdminPromos";
 import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/admin/b2b" element={<ProtectedRoute requiredRole="admin"><AdminB2B /></ProtectedRoute>} />
             <Route path="/admin/promos" element={<ProtectedRoute requiredRole="admin"><AdminPromos /></ProtectedRoute>} />
             <Route path="/admin/customers" element={<ProtectedRoute requiredRole="admin"><AdminCustomers /></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute requiredRole="admin"><AdminAnalytics /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
