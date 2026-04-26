@@ -1,31 +1,42 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { ArrowUp, ArrowDown, DollarSign, Package, ShoppingCart, Users, Loader2 } from "lucide-react";
+import { DollarSign, Package, ShoppingCart, Users, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useProducts } from "@/hooks/useProducts";
 import { useAllOrders } from "@/hooks/useOrders";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminOverview = () => {
+  const { role } = useAuth();
   const { data: products } = useProducts();
-  const { data: orders, isLoading } = useAllOrders();
-  const { data: profiles } = useQuery({
+  const { data: orders, isLoading: ordersLoading } = useAllOrders();
+  
+  const { data: profiles, isLoading: profilesLoading } = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("id");
       if (error) throw error;
       return data;
     },
+    enabled: role === "admin", // Waits for admin role confirmation
   });
 
-  const revenue = (orders ?? []).reduce((sum, o) => sum + Number(o.total), 0);
+  // Calculate real MTD (Month-to-Date) Revenue
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+  const mtdOrders = (orders ?? []).filter(o => new Date(o.created_at) >= startOfMonth);
+  const mtdRevenue = mtdOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
   const stats = [
-    { label: "Revenue (MTD)", value: `₹${revenue.toLocaleString()}`, icon: DollarSign },
+    { label: "Revenue (MTD)", value: `₹${mtdRevenue.toLocaleString()}`, icon: DollarSign },
     { label: "Orders", value: String((orders ?? []).length), icon: ShoppingCart },
     { label: "Products", value: String((products ?? []).length), icon: Package },
     { label: "Customers", value: String((profiles ?? []).length), icon: Users },
   ];
+
+  const isLoading = ordersLoading || profilesLoading;
 
   return (
     <AdminLayout>
