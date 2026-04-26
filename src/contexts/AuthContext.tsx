@@ -24,12 +24,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<"admin" | "customer" | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchRole = async (userId: string) => {
+  const fetchRole = async (currentUser: User) => {
+    if (currentUser.email) {
+      // 1. Check if the user's email exists in the business owner/admin table
+      // Replace 'admin_emails' with your actual table name if different
+      const { data: adminData } = await supabase
+        .from("admin_emails") 
+        .select("email")
+        .eq("email", currentUser.email)
+        .maybeSingle();
+
+      if (adminData) {
+        setRole("admin");
+        return;
+      }
+    }
+
+    // 2. Fallback to standard user_roles table check
     const { data } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
+      .eq("user_id", currentUser.id)
       .single();
+      
     setRole((data?.role as "admin" | "customer") ?? "customer");
   };
 
@@ -39,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
-        fetchRole(s.user.id);
+        fetchRole(s.user);
       }
       setLoading(false);
     });
@@ -50,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(s);
         setUser(s?.user ?? null);
         if (s?.user) {
-          fetchRole(s.user.id);
+          fetchRole(s.user);
         } else {
           setRole(null);
         }
