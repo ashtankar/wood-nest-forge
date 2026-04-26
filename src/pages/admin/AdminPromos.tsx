@@ -8,8 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminPromos = () => {
+  const { role } = useAuth();
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [code, setCode] = useState("");
@@ -24,6 +26,7 @@ const AdminPromos = () => {
       if (error) throw error;
       return data;
     },
+    enabled: role === "admin", // Waits for admin role confirmation
   });
 
   const handleCreate = async () => {
