@@ -6,14 +6,14 @@ import { ArrowRight, Loader2, ShieldCheck, Truck, CreditCard, Clock, ChevronRigh
 import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-furniture.jpg";
 
-// Replaced generic icons with professional photo-circles (Marketplace Standard)
+// Photo-circles using Indic-focused keywords (Teak, Sheesham, Ethnic Decor, Cane)
 const CATEGORIES = [
-  { name: "Living Room", image: "https://loremflickr.com/200/200/sofa,livingroom?lock=101", path: "/shop?room=Living+Room" },
-  { name: "Bedroom", image: "https://loremflickr.com/200/200/bed,bedroom?lock=102", path: "/shop?room=Bedroom" },
-  { name: "Dining", image: "https://loremflickr.com/200/200/diningtable?lock=103", path: "/shop?room=Dining+Room" },
-  { name: "Office", image: "https://loremflickr.com/200/200/desk,office?lock=104", path: "/shop?room=Office" },
-  { name: "Decor", image: "https://loremflickr.com/200/200/lamp,decor?lock=105", path: "/shop?category=Decor" },
-  { name: "Outdoor", image: "https://loremflickr.com/200/200/patio,furniture?lock=106", path: "/shop?room=Outdoor" },
+  { name: "Living Room", image: "https://loremflickr.com/200/200/teak,sofa?lock=101", path: "/shop?room=Living+Room" },
+  { name: "Bedroom", image: "https://loremflickr.com/200/200/sheesham,bed?lock=102", path: "/shop?room=Bedroom" },
+  { name: "Dining", image: "https://loremflickr.com/200/200/wood,diningtable?lock=103", path: "/shop?room=Dining+Room" },
+  { name: "Office", image: "https://loremflickr.com/200/200/study,desk,wood?lock=104", path: "/shop?room=Office" },
+  { name: "Decor", image: "https://loremflickr.com/200/200/ethnic,decor,india?lock=105", path: "/shop?category=Decor" },
+  { name: "Outdoor", image: "https://loremflickr.com/200/200/cane,furniture?lock=106", path: "/shop?room=Outdoor" },
 ];
 
 const Index = () => {
@@ -49,16 +49,17 @@ const Index = () => {
       {/* 2. Premium Promotional Hero Banner */}
       <section className="container mx-auto px-4 py-6 md:py-8">
         <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[4/3] md:aspect-[21/7] shadow-xl group">
-          <img src={heroImg} alt="Grand Furniture Sale" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent flex flex-col justify-center px-6 md:px-16">
+          {/* Main hero image - assuming your hero-furniture.jpg is suitable, but you can swap this too */}
+          <img src={heroImg} alt="Festive Furniture Sale" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent flex flex-col justify-center px-6 md:px-16">
             <div className="inline-block bg-primary text-primary-foreground font-bold tracking-widest text-[10px] md:text-xs uppercase mb-4 px-3 py-1.5 rounded-sm w-max shadow-sm">
-              Season Finale Sale
+              The Grand Festive Sale
             </div>
             <h1 className="text-white text-4xl md:text-5xl lg:text-6xl font-display leading-[1.1] max-w-2xl">
-              Elevate Your Home.<br /> Up to 40% Off.
+              Handcrafted Heritage.<br /> Up to 40% Off.
             </h1>
             <p className="text-white/80 mt-4 md:mt-5 text-sm md:text-lg max-w-md font-body font-light">
-              Discover masterfully crafted wooden furniture designed for modern living. Limited stock available.
+              Discover masterfully crafted Sheesham and Teak wood furniture, celebrating Indian artistry for your modern home.
             </p>
             <div className="mt-8 md:mt-10">
               <Link to="/shop">
@@ -81,7 +82,7 @@ const Index = () => {
             </div>
             <div>
               <p className="font-bold text-sm">Secure Checkout</p>
-              <p className="text-xs text-muted-foreground mt-0.5">100% encrypted payments</p>
+              <p className="text-xs text-muted-foreground mt-0.5">100% encrypted payments via UPI & Cards</p>
             </div>
           </div>
           <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-xl border border-border/50">
@@ -89,8 +90,8 @@ const Index = () => {
               <Truck className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="font-bold text-sm">Free Delivery</p>
-              <p className="text-xs text-muted-foreground mt-0.5">On all orders above ₹999</p>
+              <p className="font-bold text-sm">Pan-India Delivery</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Free shipping on all orders above ₹999</p>
             </div>
           </div>
           <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-xl border border-border/50">
@@ -99,13 +100,13 @@ const Index = () => {
             </div>
             <div>
               <p className="font-bold text-sm">No Cost EMI</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Up to 6 months on major cards</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Up to 6 months on major Credit Cards</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. Deals of the Day (Marketplace style) */}
+      {/* 4. Deals of the Day */}
       <section className="container mx-auto px-4 py-10">
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <div className="flex items-center gap-4">
@@ -130,25 +131,25 @@ const Index = () => {
         )}
       </section>
 
-      {/* 5. Photographic Promo Banners (Replaced Icons with Real Images) */}
+      {/* 5. Photographic Promo Banners (Indic Focused) */}
       <section className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {/* Office Promo */}
+          {/* Office/Study Promo */}
           <Link to="/shop?room=Office" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
-            <img src="https://loremflickr.com/800/600/homeoffice,desk?lock=201" alt="Home Office" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://loremflickr.com/800/600/teak,desk?lock=201" alt="Home Office" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10">
-              <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-2">The Modern Office</h3>
-              <p className="text-white/80 text-sm md:text-base mb-4 max-w-[280px]">Premium ergonomic chairs & solid wood desks starting at ₹4,999.</p>
-              <span className="text-primary font-semibold text-sm flex items-center group-hover:underline">Shop Workspace <ArrowRight className="h-4 w-4 ml-1" /></span>
+              <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-2">The Modern Workspace</h3>
+              <p className="text-white/80 text-sm md:text-base mb-4 max-w-[280px]">Solid Sheesham wood writing desks and ergonomic seating starting at ₹4,999.</p>
+              <span className="text-primary font-semibold text-sm flex items-center group-hover:underline">Shop Study <ArrowRight className="h-4 w-4 ml-1" /></span>
             </div>
           </Link>
           
-          {/* Bedroom Promo */}
+          {/* Ethnic Bedroom/Living Promo */}
           <Link to="/shop?room=Bedroom" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
-            <img src="https://loremflickr.com/800/600/bedroom,interior?lock=202" alt="Bedroom" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://loremflickr.com/800/600/indian,bedroom,decor?lock=202" alt="Bedroom" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10">
-              <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-2">Cozy Sanctuaries</h3>
-              <p className="text-white/80 text-sm md:text-base mb-4 max-w-[280px]">Refresh your bedroom with our new oak and walnut frames.</p>
+              <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-2">Ethnic Sanctuaries</h3>
+              <p className="text-white/80 text-sm md:text-base mb-4 max-w-[280px]">Refresh your bedroom with beautifully carved wooden frames and warm tones.</p>
               <span className="text-primary font-semibold text-sm flex items-center group-hover:underline">Shop Bedroom <ArrowRight className="h-4 w-4 ml-1" /></span>
             </div>
           </Link>
@@ -173,7 +174,7 @@ const Index = () => {
       {/* 7. Category Showcase: Decor */}
       <section className="container mx-auto px-4 py-10 mb-12 bg-muted/20 rounded-3xl">
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
-          <h2 className="font-display text-2xl md:text-3xl font-bold">Lighting & Decor</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold">Handcrafted Decor & Lighting</h2>
           <Link to="/shop?category=Decor" className="text-primary text-sm font-bold hover:underline flex items-center">
             View Collection <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
