@@ -23,7 +23,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  
+  // Extract user to display the connected business owner email
+  const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
     await signOut();
@@ -32,10 +34,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex font-sans">
       <aside className={cn("hidden lg:flex flex-col bg-card border-r border-border/50 transition-all duration-300", collapsed ? "w-16" : "w-60")}>
         <div className="h-16 flex items-center px-4 border-b border-border/50">
-          {!collapsed && <Link to="/admin" className="font-display text-xl">AlgoForge</Link>}
+          {!collapsed && <Link to="/admin" className="font-display text-xl font-semibold tracking-tight">AlgoForge</Link>}
           <Button variant="ghost" size="icon" className={cn("ml-auto", collapsed && "mx-auto")} onClick={() => setCollapsed(!collapsed)}>
             <Menu className="h-4 w-4" />
           </Button>
@@ -44,15 +46,22 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           {navItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
-              <Link key={item.href} to={item.href} className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body transition-colors", isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
+              <Link key={item.href} to={item.href} className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors", isActive ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
                 <item.icon className="h-4 w-4 shrink-0" />
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             );
           })}
         </nav>
-        <div className="p-2 border-t border-border/50">
-          <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-colors">
+        
+        <div className="p-3 border-t border-border/50 flex flex-col gap-1">
+          {/* Minimalist email display for the business owner */}
+          {!collapsed && user?.email && (
+            <div className="px-3 py-2 text-xs font-medium text-muted-foreground truncate rounded-md bg-muted/30">
+              {user.email}
+            </div>
+          )}
+          <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-colors mt-1">
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Log Out</span>}
           </button>
@@ -61,7 +70,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden h-14 flex items-center px-4 border-b border-border/50 bg-card gap-2">
-          <Link to="/admin" className="font-display text-lg shrink-0">AlgoForge</Link>
+          <Link to="/admin" className="font-display text-lg font-semibold shrink-0">AlgoForge</Link>
           <div className="ml-auto flex items-center gap-1 min-w-0">
             <div className="flex items-center gap-1 overflow-x-auto">
               {navItems.map((item) => {
@@ -75,10 +84,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 );
               })}
             </div>
-            <Button variant="ghost" size="sm" className="shrink-0 font-body" onClick={handleLogout}>Log Out</Button>
+            <Button variant="ghost" size="sm" className="shrink-0" onClick={handleLogout}>Log Out</Button>
           </div>
         </header>
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 overflow-auto bg-background/95">{children}</main>
       </div>
     </div>
   );
