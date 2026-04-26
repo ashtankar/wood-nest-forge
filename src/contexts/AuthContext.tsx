@@ -1,94 +1,97 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard, DollarSign, Package, ShoppingCart, Briefcase, Tag, Users, LogOut, Menu, BarChart3,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
 
-const navItems = [
-  { label: "Overview", href: "/admin", icon: LayoutDashboard },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Financials", href: "/admin/financials", icon: DollarSign },
-  { label: "Products", href: "/admin/products", icon: Package },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { label: "B2B Catalog", href: "/admin/b2b", icon: Briefcase },
-  { label: "Promos", href: "/admin/promos", icon: Tag },
-  { label: "Customers", href: "/admin/customers", icon: Users },
-];
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  role: "admin" | "customer" | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+}
 
-export function AdminLayout({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
-  const navigate = useNavigate();
-  
-  // Extract user to display the connected business owner email
-  const { user, signOut } = useAuth();
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  role: null,
+  loading: true,
+  signOut: async () => {},
+});
 
-  const handleLogout = async () => {
-    await signOut();
-    toast.success("Logged out successfully");
-    navigate("/");
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<"admin" | "customer" | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchRole = async (currentUser: User) => {
+    console.log(`[Auth] Checking admin status for user_id: ${currentUser.id}`);
+    
+    // 1. Check admin_emails table strictly by user_id
+    const { data: adminData, error: adminError } = await supabase
+      .from("admin_emails")
+      .select("user_id")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    console.log("[Auth] Admin table result:", { adminData, adminError });
+
+    if (adminData) {
+      console.log("[Auth] Success: User verified as Admin via user_id!");
+      setRole("admin");
+      return;
+    }
+
+    // 2. Fallback to standard user_roles check for standard customers
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", currentUser.id)
+      .maybeSingle(); 
+      
+    console.log("[Auth] Fallback user_roles result:", { roleData, roleError });
+    setRole((roleData?.role as "admin" | "customer") ?? "customer");
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) {
+        fetchRole(s.user).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, s) => {
+        setSession(s);
+        setUser(s?.user ?? null);
+        if (s?.user) {
+          fetchRole(s.user).finally(() => setLoading(false));
+        } else {
+          setRole(null);
+          setLoading(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setRole(null);
   };
 
   return (
-    <div className="min-h-screen flex font-sans">
-      <aside className={cn("hidden lg:flex flex-col bg-card border-r border-border/50 transition-all duration-300", collapsed ? "w-16" : "w-60")}>
-        <div className="h-16 flex items-center px-4 border-b border-border/50">
-          {!collapsed && <Link to="/admin" className="font-display text-xl font-semibold tracking-tight">AlgoForge</Link>}
-          <Button variant="ghost" size="icon" className={cn("ml-auto", collapsed && "mx-auto")} onClick={() => setCollapsed(!collapsed)}>
-            <Menu className="h-4 w-4" />
-          </Button>
-        </div>
-        <nav className="flex-1 py-4 space-y-1 px-2">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link key={item.href} to={item.href} className={cn("flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors", isActive ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                <item.icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-        
-        <div className="p-3 border-t border-border/50 flex flex-col gap-1">
-          {/* Minimalist email display for the business owner */}
-          {!collapsed && user?.email && (
-            <div className="px-3 py-2 text-xs font-medium text-muted-foreground truncate rounded-md bg-muted/30">
-              {user.email}
-            </div>
-          )}
-          <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-colors mt-1">
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Log Out</span>}
-          </button>
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden h-14 flex items-center px-4 border-b border-border/50 bg-card gap-2">
-          <Link to="/admin" className="font-display text-lg font-semibold shrink-0">AlgoForge</Link>
-          <div className="ml-auto flex items-center gap-1 min-w-0">
-            <div className="flex items-center gap-1 overflow-x-auto">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link key={item.href} to={item.href}>
-                    <Button variant={isActive ? "default" : "ghost"} size="icon" className="h-9 w-9 shrink-0">
-                      <item.icon className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                );
-              })}
-            </div>
-            <Button variant="ghost" size="sm" className="shrink-0" onClick={handleLogout}>Log Out</Button>
-          </div>
-        </header>
-        <main className="flex-1 p-4 lg:p-8 overflow-auto bg-background/95">{children}</main>
-      </div>
-    </div>
+    <AuthContext.Provider value={{ user, session, role, loading, signOut }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
+
+export const useAuth = () => useContext(AuthContext);
