@@ -5,8 +5,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AdminB2B = () => {
+  const { role } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: inquiries, isLoading } = useQuery({
@@ -19,6 +21,7 @@ const AdminB2B = () => {
       if (error) throw error;
       return data;
     },
+    enabled: role === "admin", // Waits for admin role confirmation
   });
 
   const updateStatus = async (id: string, status: string) => {
