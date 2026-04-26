@@ -14,7 +14,8 @@ const navItems = [
   { label: "Financials", href: "/admin/financials", icon: DollarSign },
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { label: "B2B Catalog", href: "/admin/b2b", icon: Briefcase },
+  // Changed label from "B2B Catalog" to "B2B Inquiries"
+  { label: "B2B Inquiries", href: "/admin/b2b", icon: Briefcase }, 
   { label: "Promos", href: "/admin/promos", icon: Tag },
   { label: "Customers", href: "/admin/customers", icon: Users },
 ];
