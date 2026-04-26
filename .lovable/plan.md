@@ -1,62 +1,62 @@
+## Goal
 
+Make the Business Owner dashboard fully accessible, add a sales Analytics tab with daily/weekly/monthly charts, add a Dashboard nav button for logged-in admins, and ensure every product detail page has a Download Catalogue button. Confirm admin can fully insert/update/delete across products, orders, and customers.
 
-## Plan: Functional AI Chat Negotiation Widget
+## Changes
 
-Replace the placeholder live-chat button (currently just shows a toast) with a fully functional AI chatbot powered by Lovable AI Gateway. The bot acts as a sales/negotiation assistant that can grant small discounts automatically and escalate larger requests to a human manager.
+### 1. Header — Dashboard button for business owners
+File: `src/components/storefront/StorefrontHeader.tsx`
+- Read `role` from `useAuth()`.
+- When `user && role === "admin"`, render a "Dashboard" button (with `LayoutDashboard` icon) linking to `/admin` next to the wishlist icon, on both desktop and mobile.
 
-### Behavior
+### 2. New Analytics page
+File: `src/pages/admin/AdminAnalytics.tsx` (new)
+- Use `useAllOrders()` + `useProducts()`.
+- Compute three datasets from `orders.created_at` + `orders.total`:
+  - Daily sales (last 30 days)
+  - Weekly sales (last 12 weeks, ISO week buckets)
+  - Monthly sales (last 12 months)
+- Render a tabbed view (`Tabs` from shadcn) with `recharts` `LineChart`/`BarChart`:
+  - Total revenue, total orders, average order value KPI cards
+  - Sales-over-time chart (switchable Day / Week / Month)
+  - Top-selling products bar chart (aggregated from `order_items`)
+  - Order status breakdown (pie or stacked bar)
+- Empty-state and `Loader2` while loading.
 
-- Floating chat button (bottom-right) opens a polished chat panel.
-- AI greets the user formally, can answer product/order questions, and handle discount negotiations.
-- **Discount logic** (enforced server-side in the system prompt + tool calling):
-  - Requests ≤ 5% → AI issues a one-time promo code politely.
-  - Requests > 5% → AI formally declines and refers user to the manager with a sample contact number (e.g. **+1 (555) 010-2024**) and email.
-- Conversation history kept in component state (per session).
-- Markdown rendering for AI replies, streaming token-by-token, typing indicator, scroll-to-bottom.
-- For logged-in users the chat can reference their cart total (passed in context); guests get generic help.
+### 3. Wire Analytics into admin shell
+Files: `src/App.tsx`, `src/components/admin/AdminLayout.tsx`
+- Add route `/admin/analytics` (admin-protected) → `AdminAnalytics`.
+- Add `{ label: "Analytics", href: "/admin/analytics", icon: BarChart3 }` to the sidebar `navItems` (between Financials and Products).
+- Add an "Analytics" quick-link card in `BusinessDashboard.tsx`.
 
-### Architecture
+### 4. Product Detail — guaranteed Download Catalogue
+File: `src/pages/ProductDetail.tsx`
+- Show the Download Catalogue button on every product page. If `product.catalogue_url` is empty, render the button as disabled with tooltip "Catalogue coming soon" (instead of hiding it).
+- Keep the working download anchor when URL is present.
 
-```text
-StorefrontLayout
-  └── ChatWidget (new)
-        ├── Floating button → toggles panel
-        ├── Chat panel (Sheet/Card, Sonner-style)
-        │     ├── Message list (ReactMarkdown)
-        │     ├── Streaming assistant bubble
-        │     └── Input + send button
-        └── streamChat() → /functions/v1/negotiation-chat (SSE)
+### 5. Admin product form — full edit + bulk fields
+File: `src/pages/admin/AdminProducts.tsx`
+- Add an Edit dialog (pencil icon) that pre-fills the existing product and calls `supabase.from("products").update(...).eq("id", id)`.
+- Add `original_price`, `tags` (comma-separated), and `images` (comma-separated URLs) to both Create and Edit forms so admin truly controls A→Z.
+- Keep delete confirmation via `AlertDialog` to avoid accidental removal.
 
-Edge Function: supabase/functions/negotiation-chat/index.ts
-  - System prompt encoding negotiation rules + manager contact
-  - Calls Lovable AI Gateway (google/gemini-3-flash-preview)
-  - Streams SSE back to client
-  - verify_jwt = false (public widget)
-```
+### 6. Admin Orders — status update
+File: `src/pages/admin/AdminOrders.tsx`
+- Ensure the status `Select` writes back via `supabase.from("orders").update({ status }).eq("id", id)` and invalidates `["all-orders"]`. (Verify and patch if missing.)
+- Add tracking_link inline edit input.
 
-### Files
+### 7. Dependency
+- Add `recharts` if not already present (it's in shadcn defaults but verify before importing).
 
-**New**
-- `supabase/functions/negotiation-chat/index.ts` — streaming edge function with negotiation system prompt.
-- `src/components/storefront/ChatWidget.tsx` — chat UI, streaming client, markdown rendering.
+## Technical Notes
 
-**Edited**
-- `src/components/storefront/StorefrontLayout.tsx` — replace toast button with `<ChatWidget />`.
-- `supabase/config.toml` — register `negotiation-chat` with `verify_jwt = false`.
-- `package.json` — add `react-markdown` (auto-installed).
+- Date bucketing done client-side with vanilla `Date` math; no migration needed.
+- All new admin reads/writes are gated by existing `has_role(auth.uid(), 'admin')` RLS — no schema or policy changes.
+- Header role check uses the already-loaded `role` from `AuthContext` (no extra query).
+- Charts use shadcn's existing `chart.tsx` wrapper around recharts for consistent theming.
 
-### System Prompt (key rules baked into edge function)
+## Out of Scope
 
-- Persona: "Aria", formal sales associate for Wood Nest Forge.
-- Rule 1: If customer requests a discount ≤ 5%, generate a code like `WELCOME5` / `THANKS3` and confirm.
-- Rule 2: If > 5%, politely decline and provide manager contact: **+1 (555) 010-2024** / `manager@woodnestforge.com`.
-- Rule 3: Never invent product prices or stock — defer to site data; suggest checking the product page.
-- Tone: concise, professional, no emojis.
-
-### Technical notes
-
-- Streaming follows the line-by-line SSE pattern from the AI Gateway docs (handles partial JSON, `[DONE]`, CRLF, 429/402 errors with toasts).
-- `LOVABLE_API_KEY` already provisioned — no secrets prompt.
-- No DB schema changes needed; chat is ephemeral. (Future enhancement could persist `chat_messages`.)
-- Discount codes are **conversational only** (AI suggests codes); they are NOT auto-inserted into `promo_codes` to avoid abuse. Plan note: if you want the AI to actually create real redeemable codes in the DB, we can add that as a follow-up using a service-role insert inside the edge function.
-
+- No DB schema changes.
+- No new edge functions.
+- No changes to customer-facing checkout / payment flow.
