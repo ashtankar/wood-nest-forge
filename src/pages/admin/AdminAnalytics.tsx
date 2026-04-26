@@ -1,15 +1,16 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAllOrders } from "@/hooks/useOrders";
 import { useProducts } from "@/hooks/useProducts";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatPrice } from "@/lib/format";
 import {
-  ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  ResponsiveContainer, LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 type Order = NonNullable<ReturnType<typeof useAllOrders>["data"]>[number];
 
@@ -20,57 +21,17 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "hsl(0 84% 60%)",
 };
 
+// Date Helpers
 function startOfDay(d: Date) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 function startOfWeek(d: Date) {
   const x = startOfDay(d);
-  const day = x.getDay();
-  const diff = (day + 6) % 7; // Monday-start
+  const diff = (x.getDay() + 6) % 7; // Monday-start
   x.setDate(x.getDate() - diff);
   return x;
 }
-function startOfMonth(d: Date) { const x = new Date(d.getFullYear(), d.getMonth(), 1); return x; }
-
-function buildBuckets(orders: Order[], granularity: "day" | "week" | "month") {
-  const now = new Date();
-  const map = new Map<string, { revenue: number; count: number }>();
-  const labels: { key: string; label: string }[] = [];
-
-  if (granularity === "day") {
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(now); d.setDate(d.getDate() - i);
-      const key = startOfDay(d).toISOString();
-      labels.push({ key, label: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) });
-      map.set(key, { revenue: 0, count: 0 });
-    }
-    orders.forEach((o) => {
-      const k = startOfDay(new Date(o.created_at)).toISOString();
-      const b = map.get(k); if (b) { b.revenue += Number(o.total); b.count += 1; }
-    });
-  } else if (granularity === "week") {
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now); d.setDate(d.getDate() - i * 7);
-      const key = startOfWeek(d).toISOString();
-      labels.push({ key, label: `Wk ${new Date(key).toLocaleDateString(undefined, { month: "short", day: "numeric" })}` });
-      map.set(key, { revenue: 0, count: 0 });
-    }
-    orders.forEach((o) => {
-      const k = startOfWeek(new Date(o.created_at)).toISOString();
-      const b = map.get(k); if (b) { b.revenue += Number(o.total); b.count += 1; }
-    });
-  } else {
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = d.toISOString();
-      labels.push({ key, label: d.toLocaleDateString(undefined, { month: "short", year: "2-digit" }) });
-      map.set(key, { revenue: 0, count: 0 });
-    }
-    orders.forEach((o) => {
-      const k = startOfMonth(new Date(o.created_at)).toISOString();
-      const b = map.get(k); if (b) { b.revenue += Number(o.total); b.count += 1; }
-    });
-  }
-
-  return labels.map((l) => ({ label: l.label, ...(map.get(l.key) ?? { revenue: 0, count: 0 }) }));
+function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function getLocalDateString(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 const AdminAnalytics = () => {
@@ -82,9 +43,66 @@ const AdminAnalytics = () => {
   const totalOrders = allOrders.length;
   const aov = totalOrders ? totalRevenue / totalOrders : 0;
 
-  const daily = useMemo(() => buildBuckets(allOrders, "day"), [allOrders]);
-  const weekly = useMemo(() => buildBuckets(allOrders, "week"), [allOrders]);
-  const monthly = useMemo(() => buildBuckets(allOrders, "month"), [allOrders]);
+  // Chart Controls State
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return getLocalDateString(d);
+  });
+  const [endDate, setEndDate] = useState(() => getLocalDateString(new Date()));
+  const [granularity, setGranularity] = useState<"day" | "week" | "month">("day");
+  const [chartType, setChartType] = useState<"line" | "bar" | "area">("line");
+
+  // Dynamic Bucket Builder based on Date Range
+  const chartData = useMemo(() => {
+    const map = new Map<string, { revenue: number; count: number }>();
+    const labels: { key: string; label: string }[] = [];
+    
+    const start = new Date(startDate); start.setHours(0,0,0,0);
+    const end = new Date(endDate); end.setHours(23,59,59,999);
+
+    let current = new Date(start);
+
+    // 1. Initialize Buckets
+    if (granularity === "day") {
+      while (current <= end) {
+        const key = startOfDay(current).toISOString();
+        labels.push({ key, label: current.toLocaleDateString(undefined, { month: "short", day: "numeric" }) });
+        map.set(key, { revenue: 0, count: 0 });
+        current.setDate(current.getDate() + 1);
+      }
+    } else if (granularity === "week") {
+      current = startOfWeek(current);
+      while (current <= end) {
+        const key = startOfWeek(current).toISOString();
+        labels.push({ key, label: `Wk ${current.toLocaleDateString(undefined, { month: "short", day: "numeric" })}` });
+        map.set(key, { revenue: 0, count: 0 });
+        current.setDate(current.getDate() + 7);
+      }
+    } else {
+      current = startOfMonth(current);
+      while (current <= end) {
+        const key = startOfMonth(current).toISOString();
+        labels.push({ key, label: current.toLocaleDateString(undefined, { month: "short", year: "2-digit" }) });
+        map.set(key, { revenue: 0, count: 0 });
+        current.setMonth(current.getMonth() + 1);
+      }
+    }
+
+    // 2. Fill Buckets
+    allOrders.forEach((o) => {
+      const d = new Date(o.created_at);
+      if (d >= start && d <= end) {
+        let k = "";
+        if (granularity === "day") k = startOfDay(d).toISOString();
+        else if (granularity === "week") k = startOfWeek(d).toISOString();
+        else k = startOfMonth(d).toISOString();
+        
+        const b = map.get(k); 
+        if (b) { b.revenue += Number(o.total); b.count += 1; }
+      }
+    });
+
+    return labels.map((l) => ({ label: l.label, ...(map.get(l.key) ?? { revenue: 0, count: 0 }) }));
+  }, [allOrders, startDate, endDate, granularity]);
 
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -113,6 +131,56 @@ const AdminAnalytics = () => {
     { label: "Active Products", value: String((products ?? []).length), icon: Package, hue: "bg-amber-50 text-amber-700" },
   ];
 
+  const renderChart = () => {
+    const commonProps = {
+      data: chartData,
+      margin: { top: 10, right: 10, left: 0, bottom: 0 }
+    };
+
+    if (chartType === "bar") {
+      return (
+        <BarChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+          <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(v) => `₹${v}`} />
+          <YAxis yAxisId="right" orientation="right" stroke="hsl(217 91% 60%)" fontSize={12} tickLine={false} axisLine={false} dx={10} />
+          <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} formatter={(v: number, name: string) => name === "revenue" ? [formatPrice(v), "Revenue"] : [v, "Orders"]} />
+          <Legend wrapperStyle={{ paddingTop: "20px" }} />
+          <Bar yAxisId="left" dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="revenue" />
+          <Bar yAxisId="right" dataKey="count" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} name="count" />
+        </BarChart>
+      );
+    }
+
+    if (chartType === "area") {
+      return (
+        <AreaChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+          <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(v) => `₹${v}`} />
+          <YAxis yAxisId="right" orientation="right" stroke="hsl(217 91% 60%)" fontSize={12} tickLine={false} axisLine={false} dx={10} />
+          <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} formatter={(v: number, name: string) => name === "revenue" ? [formatPrice(v), "Revenue"] : [v, "Orders"]} />
+          <Legend wrapperStyle={{ paddingTop: "20px" }} />
+          <Area yAxisId="left" type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} name="revenue" />
+          <Area yAxisId="right" type="monotone" dataKey="count" stroke="hsl(217 91% 60%)" fill="hsl(217 91% 60%)" fillOpacity={0.2} strokeWidth={2} name="count" />
+        </AreaChart>
+      );
+    }
+
+    return (
+      <LineChart {...commonProps}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+        <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} dx={-10} tickFormatter={(v) => `₹${v}`} />
+        <YAxis yAxisId="right" orientation="right" stroke="hsl(217 91% 60%)" fontSize={12} tickLine={false} axisLine={false} dx={10} />
+        <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} formatter={(v: number, name: string) => name === "revenue" ? [formatPrice(v), "Revenue"] : [v, "Orders"]} />
+        <Legend wrapperStyle={{ paddingTop: "20px" }} />
+        <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} name="revenue" />
+        <Line yAxisId="right" type="monotone" dataKey="count" stroke="hsl(217 91% 60%)" strokeWidth={2} dot={{ r: 3 }} name="count" />
+      </LineChart>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -138,40 +206,42 @@ const AdminAnalytics = () => {
         ) : (
           <>
             <div className="p-5 rounded-[16px] bg-card card-shadow">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
                 <h2 className="font-display text-lg">Sales Over Time</h2>
+                
+                {/* Control Panel */}
+                <div className="flex flex-wrap items-center gap-3 bg-muted/30 p-2 rounded-lg border border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-8 w-[140px] text-xs bg-background" />
+                    <span className="text-muted-foreground text-xs">to</span>
+                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-8 w-[140px] text-xs bg-background" />
+                  </div>
+                  <div className="w-[1px] h-6 bg-border/50 hidden sm:block mx-1"></div>
+                  <Select value={granularity} onValueChange={(v: any) => setGranularity(v)}>
+                    <SelectTrigger className="h-8 w-[110px] text-xs bg-background"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="day" className="text-xs">Daily</SelectItem>
+                      <SelectItem value="week" className="text-xs">Weekly</SelectItem>
+                      <SelectItem value="month" className="text-xs">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={chartType} onValueChange={(v: any) => setChartType(v)}>
+                    <SelectTrigger className="h-8 w-[110px] text-xs bg-background"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="line" className="text-xs">Line Chart</SelectItem>
+                      <SelectItem value="bar" className="text-xs">Bar Chart</SelectItem>
+                      <SelectItem value="area" className="text-xs">Area Chart</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <Tabs defaultValue="day">
-                <TabsList>
-                  <TabsTrigger value="day">Daily (30d)</TabsTrigger>
-                  <TabsTrigger value="week">Weekly (12w)</TabsTrigger>
-                  <TabsTrigger value="month">Monthly (12m)</TabsTrigger>
-                </TabsList>
-                {([
-                  { value: "day", data: daily },
-                  { value: "week", data: weekly },
-                  { value: "month", data: monthly },
-                ] as const).map((t) => (
-                  <TabsContent key={t.value} value={t.value} className="mt-4">
-                    <div className="h-[320px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={t.data}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                          <Tooltip
-                            contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                            formatter={(v: number, name) => name === "revenue" ? [formatPrice(v), "Revenue"] : [v, "Orders"]}
-                          />
-                          <Legend />
-                          <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="count" stroke="hsl(217 91% 60%)" strokeWidth={2} dot={{ r: 3 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+
+              {/* Chart Render */}
+              <div className="h-[360px] w-full pt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  {renderChart()}
+                </ResponsiveContainer>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -183,13 +253,10 @@ const AdminAnalytics = () => {
                   <div className="h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={topProducts} layout="vertical" margin={{ left: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                        <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={120} />
-                        <Tooltip
-                          contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-                          formatter={(v: number) => [formatPrice(v), "Revenue"]}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} />
+                        <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} width={120} tickLine={false} axisLine={false} />
+                        <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} formatter={(v: number) => [formatPrice(v), "Revenue"]} />
                         <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -205,13 +272,12 @@ const AdminAnalytics = () => {
                   <div className="h-[320px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={110} label>
+                        <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={110} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                           {statusData.map((entry) => (
                             <Cell key={entry.name} fill={STATUS_COLORS[entry.name] ?? "hsl(var(--muted-foreground))"} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                        <Legend />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
