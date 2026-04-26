@@ -2,76 +2,69 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/hooks/useProducts";
-import { 
-  ArrowRight, Loader2, Sofa, BedDouble, Utensils, 
-  Briefcase, Lamp, TreePalm, ShieldCheck, Truck, 
-  CreditCard, Clock, ChevronRight 
-} from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck, Truck, CreditCard, Clock, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImg from "@/assets/hero-furniture.jpg";
 
-// Flipkart-style top category quick links
+// Replaced generic icons with professional photo-circles (Marketplace Standard)
 const CATEGORIES = [
-  { name: "Living Room", icon: Sofa, path: "/shop?room=Living+Room" },
-  { name: "Bedroom", icon: BedDouble, path: "/shop?room=Bedroom" },
-  { name: "Dining", icon: Utensils, path: "/shop?room=Dining+Room" },
-  { name: "Office", icon: Briefcase, path: "/shop?room=Office" },
-  { name: "Decor", icon: Lamp, path: "/shop?category=Decor" },
-  { name: "Outdoor", icon: TreePalm, path: "/shop?room=Outdoor" },
+  { name: "Living Room", image: "https://loremflickr.com/200/200/sofa,livingroom?lock=101", path: "/shop?room=Living+Room" },
+  { name: "Bedroom", image: "https://loremflickr.com/200/200/bed,bedroom?lock=102", path: "/shop?room=Bedroom" },
+  { name: "Dining", image: "https://loremflickr.com/200/200/diningtable?lock=103", path: "/shop?room=Dining+Room" },
+  { name: "Office", image: "https://loremflickr.com/200/200/desk,office?lock=104", path: "/shop?room=Office" },
+  { name: "Decor", image: "https://loremflickr.com/200/200/lamp,decor?lock=105", path: "/shop?category=Decor" },
+  { name: "Outdoor", image: "https://loremflickr.com/200/200/patio,furniture?lock=106", path: "/shop?room=Outdoor" },
 ];
 
 const Index = () => {
   const { data: products, isLoading } = useProducts();
 
-  // Slice data for different marketplace sections
   const allProducts = products ?? [];
-  
-  // Find products that are discounted for the "Deals" section
   const deals = allProducts.filter(p => p.original_price && p.original_price > p.price).slice(0, 4);
   const seating = allProducts.filter(p => p.category === 'Seating').slice(0, 4);
   const decor = allProducts.filter(p => p.category === 'Lighting' || p.category === 'Decor').slice(0, 4);
 
-  // Fallbacks just in case the database doesn't have enough specific filtered items yet
   const displayDeals = deals.length >= 4 ? deals : allProducts.slice(0, 4);
   const displaySeating = seating.length >= 4 ? seating : allProducts.slice(4, 8);
   const displayDecor = decor.length >= 4 ? decor : allProducts.slice(8, 12);
 
   return (
     <StorefrontLayout>
-      {/* 1. Top Categories Bar (Classic E-commerce Pattern) */}
-      <div className="bg-background border-b border-border/50 hidden md:block">
-        <div className="container mx-auto px-4 overflow-x-auto no-scrollbar">
-          <div className="flex items-center justify-between lg:justify-center gap-8 lg:gap-16 py-4 min-w-max">
+      {/* 1. Photo-Based Top Categories Bar */}
+      <div className="bg-background border-b border-border/40 hidden md:block">
+        <div className="container mx-auto px-4 py-5 overflow-x-auto no-scrollbar">
+          <div className="flex items-center justify-between lg:justify-center gap-10 lg:gap-16 min-w-max">
             {CATEGORIES.map((cat) => (
-              <Link key={cat.name} to={cat.path} className="flex flex-col items-center gap-2 group">
-                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors card-shadow">
-                  <cat.icon className="h-7 w-7" />
+              <Link key={cat.name} to={cat.path} className="flex flex-col items-center gap-3 group">
+                <div className="h-20 w-20 rounded-full overflow-hidden border border-border/50 card-shadow group-hover:shadow-md group-hover:border-primary/50 transition-all">
+                  <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
-                <span className="text-xs font-semibold text-foreground/80 group-hover:text-primary">{cat.name}</span>
+                <span className="text-sm font-medium text-foreground/90 group-hover:text-primary transition-colors">{cat.name}</span>
               </Link>
             ))}
           </div>
         </div>
       </div>
 
-      {/* 2. Promotional Hero Banner */}
-      <section className="container mx-auto px-4 py-4 md:py-6">
-        <div className="relative rounded-[16px] overflow-hidden bg-muted aspect-[4/3] md:aspect-[21/7] card-shadow">
-          <img src={heroImg} alt="Sale" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent flex flex-col justify-center px-6 md:px-16">
-            <span className="text-primary font-bold tracking-widest text-xs md:text-sm uppercase mb-2 bg-primary/20 w-max px-3 py-1 rounded-full border border-primary/30">
-              Grand Furniture Sale
-            </span>
-            <h1 className="text-white text-3xl md:text-5xl lg:text-6xl font-display leading-tight max-w-xl mt-2">
-              Upgrade Your Space.<br className="hidden md:block" /> Up to 40% Off.
+      {/* 2. Premium Promotional Hero Banner */}
+      <section className="container mx-auto px-4 py-6 md:py-8">
+        <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[4/3] md:aspect-[21/7] shadow-xl group">
+          <img src={heroImg} alt="Grand Furniture Sale" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent flex flex-col justify-center px-6 md:px-16">
+            <div className="inline-block bg-primary text-primary-foreground font-bold tracking-widest text-[10px] md:text-xs uppercase mb-4 px-3 py-1.5 rounded-sm w-max shadow-sm">
+              Season Finale Sale
+            </div>
+            <h1 className="text-white text-4xl md:text-5xl lg:text-6xl font-display leading-[1.1] max-w-2xl">
+              Elevate Your Home.<br /> Up to 40% Off.
             </h1>
-            <p className="text-white/80 mt-3 md:mt-4 text-sm md:text-base max-w-md font-body">
-              Premium handcrafted wood furniture, now at unbeatable prices. Limited time only.
+            <p className="text-white/80 mt-4 md:mt-5 text-sm md:text-lg max-w-md font-body font-light">
+              Discover masterfully crafted wooden furniture designed for modern living. Limited stock available.
             </p>
-            <div className="mt-6 md:mt-8">
+            <div className="mt-8 md:mt-10">
               <Link to="/shop">
-                <Button className="bg-white text-black hover:bg-white/90 rounded-[8px] px-6 md:px-8 py-5 md:py-6 text-sm md:text-base font-bold shadow-xl">
-                  Shop The Sale <ChevronRight className="ml-2 h-5 w-5" />
+                <Button size="lg" className="bg-white text-black hover:bg-neutral-200 rounded-sm px-8 h-14 text-base font-semibold shadow-lg transition-all hover:pl-6 hover:pr-10 relative group/btn">
+                  Shop The Collection 
+                  <ChevronRight className="absolute right-4 h-5 w-5 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
                 </Button>
               </Link>
             </div>
@@ -79,93 +72,95 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 3. Trust Badges (Marketplace Standard) */}
-      <section className="container mx-auto px-4 py-4 md:py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-border/50 rounded-[12px] bg-card card-shadow overflow-hidden divide-y md:divide-y-0 md:divide-x divide-border/50">
-          <div className="flex items-center gap-4 justify-center p-4 md:p-6 hover:bg-muted/30 transition-colors">
-            <ShieldCheck className="h-10 w-10 text-primary" />
+      {/* 3. Subtle Trust Badges */}
+      <section className="container mx-auto px-4 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8">
+          <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-xl border border-border/50">
+            <div className="h-12 w-12 rounded-full bg-background flex items-center justify-center shadow-sm shrink-0">
+              <ShieldCheck className="h-6 w-6 text-primary" />
+            </div>
             <div>
-              <p className="font-bold text-sm md:text-base">100% Secure</p>
-              <p className="text-xs md:text-sm text-muted-foreground">Safe & encrypted payments</p>
+              <p className="font-bold text-sm">Secure Checkout</p>
+              <p className="text-xs text-muted-foreground mt-0.5">100% encrypted payments</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 justify-center p-4 md:p-6 hover:bg-muted/30 transition-colors">
-            <Truck className="h-10 w-10 text-primary" />
+          <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-xl border border-border/50">
+            <div className="h-12 w-12 rounded-full bg-background flex items-center justify-center shadow-sm shrink-0">
+              <Truck className="h-6 w-6 text-primary" />
+            </div>
             <div>
-              <p className="font-bold text-sm md:text-base">Free Delivery</p>
-              <p className="text-xs md:text-sm text-muted-foreground">On all orders above ₹999</p>
+              <p className="font-bold text-sm">Free Delivery</p>
+              <p className="text-xs text-muted-foreground mt-0.5">On all orders above ₹999</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 justify-center p-4 md:p-6 hover:bg-muted/30 transition-colors">
-            <CreditCard className="h-10 w-10 text-primary" />
+          <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-xl border border-border/50">
+            <div className="h-12 w-12 rounded-full bg-background flex items-center justify-center shadow-sm shrink-0">
+              <CreditCard className="h-6 w-6 text-primary" />
+            </div>
             <div>
-              <p className="font-bold text-sm md:text-base">No Cost EMI</p>
-              <p className="text-xs md:text-sm text-muted-foreground">Up to 6 months on major cards</p>
+              <p className="font-bold text-sm">No Cost EMI</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Up to 6 months on major cards</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. Top Offers / Deals of the Day */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between bg-primary/5 p-4 md:p-6 rounded-t-[16px] border-x border-t border-primary/10">
+      {/* 4. Deals of the Day (Marketplace style) */}
+      <section className="container mx-auto px-4 py-10">
+        <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <div className="flex items-center gap-4">
-            <h2 className="font-display text-xl md:text-3xl font-bold">Deals of the Day</h2>
-            <div className="hidden md:flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm animate-pulse">
-              <Clock className="h-3.5 w-3.5" /> 12 : 34 : 56 Left
+            <h2 className="font-display text-2xl md:text-3xl font-bold">Deals of the Day</h2>
+            <div className="hidden md:flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded-sm text-xs font-bold tracking-wide">
+              <Clock className="h-3.5 w-3.5" /> ENDS IN 12:34:56
             </div>
           </div>
           <Link to="/shop">
-            <Button variant="default" size="sm" className="rounded-full px-6 font-semibold">View All Offers</Button>
+            <Button variant="outline" size="sm" className="rounded-sm font-semibold">View All Deals</Button>
           </Link>
         </div>
         
-        <div className="bg-card border-x border-b border-border/50 rounded-b-[16px] p-4 lg:p-6 card-shadow">
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-          ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              {displayDeals.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
-              ))}
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            {displayDeals.map((product, i) => (
+              <ProductCard key={product.id} product={product} index={i} />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* 5. Promotional Banners Row */}
+      {/* 5. Photographic Promo Banners (Replaced Icons with Real Images) */}
       <section className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          <div className="bg-blue-50 rounded-[16px] p-8 md:p-12 flex flex-col justify-center border border-blue-100 card-shadow relative overflow-hidden">
-            <div className="relative z-10">
-              <h3 className="font-display text-3xl text-blue-900 mb-2 font-bold">Work from Home</h3>
-              <p className="text-blue-700 mb-6 text-sm md:text-base max-w-[250px]">Premium ergonomic chairs & desks starting at ₹4,999</p>
-              <Link to="/shop?room=Office">
-                <Button size="lg" className="w-max bg-blue-600 hover:bg-blue-700 font-bold shadow-lg">Explore Office</Button>
-              </Link>
+          {/* Office Promo */}
+          <Link to="/shop?room=Office" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
+            <img src="https://loremflickr.com/800/600/homeoffice,desk?lock=201" alt="Home Office" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10">
+              <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-2">The Modern Office</h3>
+              <p className="text-white/80 text-sm md:text-base mb-4 max-w-[280px]">Premium ergonomic chairs & solid wood desks starting at ₹4,999.</p>
+              <span className="text-primary font-semibold text-sm flex items-center group-hover:underline">Shop Workspace <ArrowRight className="h-4 w-4 ml-1" /></span>
             </div>
-            <Briefcase className="absolute -bottom-10 -right-10 h-64 w-64 text-blue-500/10 rotate-12" />
-          </div>
+          </Link>
           
-          <div className="bg-amber-50 rounded-[16px] p-8 md:p-12 flex flex-col justify-center border border-amber-100 card-shadow relative overflow-hidden">
-            <div className="relative z-10">
-              <h3 className="font-display text-3xl text-amber-900 mb-2 font-bold">Cozy Bedrooms</h3>
-              <p className="text-amber-700 mb-6 text-sm md:text-base max-w-[250px]">Solid wood beds, nightstands & more at flat 20% off</p>
-              <Link to="/shop?room=Bedroom">
-                <Button size="lg" className="w-max bg-amber-600 hover:bg-amber-700 font-bold shadow-lg">Explore Bedroom</Button>
-              </Link>
+          {/* Bedroom Promo */}
+          <Link to="/shop?room=Bedroom" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
+            <img src="https://loremflickr.com/800/600/bedroom,interior?lock=202" alt="Bedroom" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-10">
+              <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-2">Cozy Sanctuaries</h3>
+              <p className="text-white/80 text-sm md:text-base mb-4 max-w-[280px]">Refresh your bedroom with our new oak and walnut frames.</p>
+              <span className="text-primary font-semibold text-sm flex items-center group-hover:underline">Shop Bedroom <ArrowRight className="h-4 w-4 ml-1" /></span>
             </div>
-            <BedDouble className="absolute -bottom-10 -right-10 h-64 w-64 text-amber-500/10 -rotate-12" />
-          </div>
+          </Link>
         </div>
       </section>
 
       {/* 6. Category Showcase: Seating */}
-      <section className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <section className="container mx-auto px-4 py-10">
+        <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <h2 className="font-display text-2xl md:text-3xl font-bold">Trending in Seating</h2>
           <Link to="/shop?category=Seating" className="text-primary text-sm font-bold hover:underline flex items-center">
-            See All <ArrowRight className="h-4 w-4 ml-1" />
+            View Collection <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
@@ -176,11 +171,11 @@ const Index = () => {
       </section>
 
       {/* 7. Category Showcase: Decor */}
-      <section className="container mx-auto px-4 py-8 mb-12">
-        <div className="flex items-center justify-between mb-6">
+      <section className="container mx-auto px-4 py-10 mb-12 bg-muted/20 rounded-3xl">
+        <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <h2 className="font-display text-2xl md:text-3xl font-bold">Lighting & Decor</h2>
           <Link to="/shop?category=Decor" className="text-primary text-sm font-bold hover:underline flex items-center">
-            See All <ArrowRight className="h-4 w-4 ml-1" />
+            View Collection <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
