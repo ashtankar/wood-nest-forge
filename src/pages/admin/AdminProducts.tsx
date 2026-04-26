@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useProducts, type DbProduct } from "@/hooks/useProducts";
 import { Plus, Pencil, Trash2, Loader2, FileDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -57,8 +57,15 @@ const toPayload = (f: FormState) => ({
   images: f.images ? f.images.split(",").map((t) => t.trim()).filter(Boolean) : [],
 });
 
-function ProductForm({ form, setForm }: { form: FormState; setForm: (f: FormState) => void }) {
+function ProductForm({ form, setForm, products }: { form: FormState; setForm: (f: FormState) => void; products: DbProduct[] }) {
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [k]: e.target.value });
+
+  // Extract unique values from existing products to populate autocomplete lists
+  const categories = useMemo(() => Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort(), [products]);
+  const rooms = useMemo(() => Array.from(new Set(products.map(p => p.room).filter(Boolean))).sort(), [products]);
+  const materials = useMemo(() => Array.from(new Set(products.map(p => p.material).filter(Boolean))).sort(), [products]);
+  const colors = useMemo(() => Array.from(new Set(products.map(p => p.color).filter(Boolean))).sort(), [products]);
+
   return (
     <div className="space-y-4 mt-4">
       <div className="grid grid-cols-2 gap-3">
@@ -70,14 +77,33 @@ function ProductForm({ form, setForm }: { form: FormState; setForm: (f: FormStat
         <div><label className="text-sm font-medium">Original (₹)</label><Input type="number" className="mt-1 border-none input-shadow" value={form.original_price} onChange={set("original_price")} /></div>
         <div><label className="text-sm font-medium">Stock</label><Input type="number" className="mt-1 border-none input-shadow" value={form.stock} onChange={set("stock")} /></div>
       </div>
+
+      {/* Inputs with Datalist for Autocomplete OR Custom Entry */}
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="text-sm font-medium">Category</label><Input className="mt-1 border-none input-shadow" value={form.category} onChange={set("category")} /></div>
-        <div><label className="text-sm font-medium">Room</label><Input className="mt-1 border-none input-shadow" value={form.room} onChange={set("room")} /></div>
+        <div>
+          <label className="text-sm font-medium">Category</label>
+          <Input list="category-options" className="mt-1 border-none input-shadow" value={form.category} onChange={set("category")} placeholder="Select or type new..." />
+          <datalist id="category-options">{categories.map(c => <option key={c as string} value={c as string} />)}</datalist>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Room</label>
+          <Input list="room-options" className="mt-1 border-none input-shadow" value={form.room} onChange={set("room")} placeholder="Select or type new..." />
+          <datalist id="room-options">{rooms.map(r => <option key={r as string} value={r as string} />)}</datalist>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div><label className="text-sm font-medium">Material</label><Input className="mt-1 border-none input-shadow" value={form.material} onChange={set("material")} /></div>
-        <div><label className="text-sm font-medium">Color</label><Input className="mt-1 border-none input-shadow" value={form.color} onChange={set("color")} /></div>
+        <div>
+          <label className="text-sm font-medium">Material</label>
+          <Input list="material-options" className="mt-1 border-none input-shadow" value={form.material} onChange={set("material")} placeholder="Select or type new..." />
+          <datalist id="material-options">{materials.map(m => <option key={m as string} value={m as string} />)}</datalist>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Color</label>
+          <Input list="color-options" className="mt-1 border-none input-shadow" value={form.color} onChange={set("color")} placeholder="Select or type new..." />
+          <datalist id="color-options">{colors.map(c => <option key={c as string} value={c as string} />)}</datalist>
+        </div>
       </div>
+
       <div><label className="text-sm font-medium">Primary Image URL</label><Input className="mt-1 border-none input-shadow" value={form.image_url} onChange={set("image_url")} /></div>
       <div><label className="text-sm font-medium">Gallery Images (comma-separated URLs)</label><Input className="mt-1 border-none input-shadow" value={form.images} onChange={set("images")} /></div>
       <div><label className="text-sm font-medium">Catalogue URL (PDF)</label><Input placeholder="https://example.com/catalogue.pdf" className="mt-1 border-none input-shadow" value={form.catalogue_url} onChange={set("catalogue_url")} /></div>
@@ -98,6 +124,8 @@ const AdminProducts = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editForm, setEditForm] = useState<FormState>(emptyForm);
+
+  const allProducts = products ?? [];
 
   const handleCreate = async () => {
     if (!form.name || !form.slug) { toast.error("Name and slug are required"); return; }
@@ -130,7 +158,7 @@ const AdminProducts = () => {
     return { label: `${stock} in stock`, cls: "bg-muted text-muted-foreground" };
   };
 
-  const editing = (products ?? []).find((p) => p.id === editId);
+  const editing = allProducts.find((p) => p.id === editId);
 
   return (
     <AdminLayout>
@@ -138,13 +166,14 @@ const AdminProducts = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl lg:text-3xl">Products & Inventory</h1>
-            <p className="text-muted-foreground font-body text-sm mt-1">{(products ?? []).length} products</p>
+            <p className="text-muted-foreground font-body text-sm mt-1">{allProducts.length} products</p>
           </div>
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Add Product</Button></DialogTrigger>
             <DialogContent className="max-w-lg bg-background max-h-[85vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="font-display text-xl">Add New Product</DialogTitle></DialogHeader>
-              <ProductForm form={form} setForm={setForm} />
+              {/* Pass products to power the smart autocomplete */}
+              <ProductForm form={form} setForm={setForm} products={allProducts} />
               <Button variant="hero" className="w-full mt-4" onClick={handleCreate}>Create Product</Button>
             </DialogContent>
           </Dialog>
@@ -167,7 +196,7 @@ const AdminProducts = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(products ?? []).map((product) => {
+                  {allProducts.map((product) => {
                     const tag = stockTag(product.stock);
                     return (
                       <tr key={product.id} className="border-b border-border/30 last:border-0 hover:bg-muted/30 transition-colors">
@@ -230,7 +259,7 @@ const AdminProducts = () => {
       <Dialog open={!!editId} onOpenChange={(v) => !v && setEditId(null)}>
         <DialogContent className="max-w-lg bg-background max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display text-xl">Edit {editing?.name ?? "Product"}</DialogTitle></DialogHeader>
-          <ProductForm form={editForm} setForm={setEditForm} />
+          <ProductForm form={editForm} setForm={setEditForm} products={allProducts} />
           <Button variant="hero" className="w-full mt-4" onClick={handleUpdate}>Save Changes</Button>
         </DialogContent>
       </Dialog>
