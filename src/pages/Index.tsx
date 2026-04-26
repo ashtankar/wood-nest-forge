@@ -2,7 +2,7 @@ import { StorefrontLayout } from "@/components/storefront/StorefrontLayout";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { Button } from "@/components/ui/button";
 import { useProducts } from "@/hooks/useProducts";
-import { ArrowRight, Loader2, ShieldCheck, Truck, CreditCard, Clock, ChevronRight, BookOpen } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck, Truck, CreditCard, Clock, ChevronRight, BookOpen, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ const Index = () => {
   const [catalogueOpen, setCatalogueOpen] = useState(false);
   const [catEmail, setCatEmail] = useState("");
   const [catRoom, setCatRoom] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const allProducts = products ?? [];
   const deals = allProducts.filter(p => p.original_price && p.original_price > p.price).slice(0, 4);
@@ -37,23 +38,51 @@ const Index = () => {
   const displaySeating = seating.length >= 4 ? seating : allProducts.slice(4, 8);
   const displayDecor = decor.length >= 4 ? decor : allProducts.slice(8, 12);
 
-  const handleDownloadCatalogue = () => {
+  // Filter products specifically for the PDF based on user selection
+  const pdfProducts = catRoom === "all" 
+    ? allProducts 
+    : allProducts.filter(p => p.room === catRoom);
+
+  const handleDownloadCatalogue = async () => {
     if (!catEmail) return toast.error("Please enter your email address.");
     if (!catRoom) return toast.error("Please select a category.");
+    if (pdfProducts.length === 0) return toast.error("No products found for this category.");
     
-    toast.success("Preparing your Lookbook...");
-    // Simulate generation delay
-    setTimeout(() => {
+    setIsGenerating(true);
+    toast.success("Curating and formatting your Lookbook...");
+
+    try {
+      // Dynamically import html2pdf to prevent SSR/Vite build issues
+      // @ts-ignore
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      const element = document.getElementById('pdf-catalogue-container');
+      
+      const opt = {
+        margin:       [15, 15, 15, 15], // Top, Left, Bottom, Right
+        filename:     `AlgoForge_Collection_${catRoom === 'all' ? 'Complete' : catRoom.replace(/\s+/g, '')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      
       toast.success("Catalogue downloaded successfully!");
       setCatalogueOpen(false);
       setCatEmail("");
       setCatRoom("");
-    }, 1500);
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
     <StorefrontLayout>
-      {/* 1. Photo-Based Top Categories Bar */}
+      {/* Top Categories Bar */}
       <div className="bg-background border-b border-border/40 hidden md:block">
         <div className="container mx-auto px-4 py-5 overflow-x-auto no-scrollbar">
           <div className="flex items-center justify-between lg:justify-center gap-10 lg:gap-16 min-w-max">
@@ -69,7 +98,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* 2. Premium Promotional Hero Banner */}
+      {/* Promotional Hero Banner */}
       <section className="container mx-auto px-4 py-6 md:py-8">
         <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[4/3] md:aspect-[21/7] shadow-xl group">
           <img src={heroImg} alt="Festive Furniture Sale" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
@@ -95,7 +124,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 3. Subtle Trust Badges */}
+      {/* Trust Badges */}
       <section className="container mx-auto px-4 py-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8">
           <div className="flex items-center gap-4 bg-muted/30 p-5 rounded-xl border border-border/50">
@@ -128,7 +157,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 4. Deals of the Day */}
+      {/* Deals of the Day */}
       <section className="container mx-auto px-4 py-10">
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <div className="flex items-center gap-4">
@@ -153,7 +182,7 @@ const Index = () => {
         )}
       </section>
 
-      {/* 5. Photographic Promo Banners */}
+      {/* Photographic Promo Banners */}
       <section className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
           <Link to="/shop?room=Office" className="relative rounded-2xl overflow-hidden aspect-[16/9] md:aspect-[2/1] group block shadow-md">
@@ -176,7 +205,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 6. Category Showcase: Seating */}
+      {/* Category Showcase: Seating */}
       <section className="container mx-auto px-4 py-10">
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <h2 className="font-display text-2xl md:text-3xl font-bold">Trending in Seating</h2>
@@ -191,7 +220,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 7. Category Showcase: Decor */}
+      {/* Category Showcase: Decor */}
       <section className="container mx-auto px-4 py-10 mb-6 bg-muted/20 rounded-3xl">
         <div className="flex items-center justify-between border-b border-border/50 pb-4 mb-6">
           <h2 className="font-display text-2xl md:text-3xl font-bold">Handcrafted Decor & Lighting</h2>
@@ -206,7 +235,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 8. Catalogue Download Section */}
+      {/* Catalogue Download Section */}
       <section className="container mx-auto px-4 py-8 mb-16">
         <div className="bg-primary text-primary-foreground rounded-3xl p-10 md:p-16 flex flex-col items-center text-center relative overflow-hidden shadow-2xl">
           <div className="relative z-10 max-w-2xl">
@@ -245,16 +274,16 @@ const Index = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Complete Collection</SelectItem>
-                        <SelectItem value="living">Living Room</SelectItem>
-                        <SelectItem value="bedroom">Bedroom</SelectItem>
-                        <SelectItem value="dining">Dining & Kitchen</SelectItem>
-                        <SelectItem value="office">Workspace</SelectItem>
-                        <SelectItem value="outdoor">Outdoor & Patio</SelectItem>
+                        <SelectItem value="Living Room">Living Room</SelectItem>
+                        <SelectItem value="Bedroom">Bedroom</SelectItem>
+                        <SelectItem value="Dining Room">Dining Room</SelectItem>
+                        <SelectItem value="Office">Workspace / Office</SelectItem>
+                        <SelectItem value="Outdoor">Outdoor & Patio</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="w-full mt-2" onClick={handleDownloadCatalogue}>
-                    Generate & Download PDF
+                  <Button className="w-full mt-2 h-12" onClick={handleDownloadCatalogue} disabled={isGenerating}>
+                    {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Download className="h-4 w-4 mr-2" /> Generate PDF Lookbook</>}
                   </Button>
                 </div>
               </DialogContent>
@@ -265,6 +294,49 @@ const Index = () => {
           <div className="absolute -bottom-24 -left-24 h-64 w-64 bg-white opacity-5 rounded-full blur-3xl"></div>
         </div>
       </section>
+
+      {/* HIDDEN A4 PDF TEMPLATE - Used Exclusively by html2pdf.js */}
+      <div className="absolute left-[-9999px] top-0 opacity-0 pointer-events-none">
+        <div id="pdf-catalogue-container" className="w-[794px] bg-white text-black p-12 font-sans">
+          
+          {/* Header */}
+          <div className="text-center border-b-2 border-neutral-900 pb-8 mb-10">
+            <h1 className="text-5xl font-display font-bold tracking-[0.2em] uppercase text-neutral-900">AlgoForge</h1>
+            <p className="text-lg text-neutral-500 mt-3 tracking-widest uppercase font-semibold">
+              The Indic Collection {catRoom !== 'all' && catRoom ? `— ${catRoom}` : ''}
+            </p>
+          </div>
+
+          {/* Product Grid */}
+          <div className="grid grid-cols-2 gap-x-10 gap-y-12">
+            {pdfProducts.map((p) => (
+              <div key={p.id} className="break-inside-avoid flex flex-col">
+                <div className="aspect-[4/3] w-full bg-neutral-100 rounded-lg overflow-hidden mb-4 border border-neutral-200">
+                  <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display font-bold text-xl text-neutral-900 mb-1 leading-tight">{p.name}</h3>
+                  <p className="text-sm text-neutral-500 font-medium mb-3">{p.material} {p.color ? `• ${p.color}` : ''}</p>
+                  
+                  <div className="flex items-end justify-between border-t border-neutral-200 pt-3 mt-auto">
+                    <div className="text-[11px] text-neutral-400 uppercase tracking-wider max-w-[60%] leading-tight">
+                      {p.dimensions ? `DIM: ${p.dimensions}` : 'Standard Dimensions'}
+                    </div>
+                    <div className="font-bold text-lg text-neutral-900 tabular-nums">
+                      ₹{p.price.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer inside PDF */}
+          <div className="mt-16 pt-8 border-t border-neutral-200 text-center text-xs text-neutral-400 font-medium tracking-widest uppercase">
+            www.algoforge.com • Handcrafted with heritage
+          </div>
+        </div>
+      </div>
 
     </StorefrontLayout>
   );
