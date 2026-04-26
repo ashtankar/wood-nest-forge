@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, DollarSign, Package, ShoppingCart, Briefcase, Tag, Users, LogOut, Menu,
+  LayoutDashboard, DollarSign, Package, ShoppingCart, Briefcase, Tag, Users, LogOut, Menu, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { label: "Financials", href: "/admin/financials", icon: DollarSign },
   { label: "Products", href: "/admin/products", icon: Package },
   { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
